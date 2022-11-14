@@ -285,10 +285,6 @@ static inline Itererator next(Itererator itererator)
 /// @return
 static return_code_t generate(std::string &buffer, const std::string &pattern, unsigned long &seed)
 {
-    // Check if the buffer is empty.
-    if (buffer.empty()) {
-        buffer.resize(8);
-    }
     // Current nesting depth.
     int depth = 0;
     // Current output pointer.
