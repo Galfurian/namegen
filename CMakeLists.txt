@@ -93,9 +93,7 @@ if(DOXYGEN_FOUND)
     )
 
     doxygen_add_docs(${PROJECT_NAME}_documentation
-        include/NAGEN/check.hpp
-        include/NAGEN/manipulation.hpp
-        include/NAGEN/utility.hpp
+        include/namegen/namegen.hpp
         LICENSE.md
         README.md
     )

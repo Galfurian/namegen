@@ -1,4 +1,6 @@
-/// @brief namegen.hpp
+/// @file namegen.hpp
+/// @brief Fantasy name generator.
+/// @details
 /// Fantasy name generator ANSI C header library
 /// This is free and unencumbered software released into the public domain.
 ///
@@ -43,6 +45,7 @@
 
 #include <string>
 
+/// @brief Main namespace.
 namespace namegen
 {
 
@@ -67,10 +70,17 @@ enum return_code_t {
 /// that contains no pointers. This is to avoid cluttering up the
 /// relocation table, but without any additional run-time overhead.
 
+/// @brief Contains support functions.
 namespace detail
 {
 
-static inline std::size_t get_tokens(int key, const char **&tokens)
+/// @brief If the provided key is valid, it will set `tokens` with the array of
+/// strings, and return the dimension of the array.
+/// @param key the key we want to search.
+/// @param tokens the output argument, if the key is valid it points to an array
+/// of strings, otherwise it is set to NULL.
+/// @return the number of tokens in the array.
+inline std::size_t get_tokens(int key, const char **&tokens)
 {
     if (key == 's') {
         static const char *__tokens[] = {
@@ -185,13 +195,14 @@ static inline std::size_t get_tokens(int key, const char **&tokens)
         tokens = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
+    tokens = NULL;
     return 0;
 }
 
-/// @brief
-/// @param s
-/// @return
-static inline unsigned long get_rand(unsigned long &seed)
+/// @brief Returns a random number.
+/// @param seed the seed used to generate the random number, it is modified.
+/// @return a random number between 0 and ULONG_MAX.
+inline unsigned long get_rand(unsigned long &seed)
 {
     seed ^= seed << 13;
     seed ^= (seed & 0xffffffffUL) >> 17;
@@ -199,91 +210,79 @@ static inline unsigned long get_rand(unsigned long &seed)
     return seed & 0xffffffffUL;
 }
 
-/// @brief
-/// @tparam T
-/// @param seed
-/// @param min
-/// @param max
-/// @return
+/// @brief Returns a random number.
+/// @param seed the seed used to generate the random number, it is modified.
+/// @param min the lower bound for the random number.
+/// @param max the upper bound for the random number.
+/// @return a random number between min and max.
 template <typename T>
-static inline T get_rand(unsigned long &seed, T min, T max)
+inline T get_rand(unsigned long &seed, T min, T max)
 {
     return static_cast<T>(min + (get_rand(seed) % max));
 }
 
-/// @brief
-/// @param c
-/// @param capitalize
-/// @return
-static inline char get_capitalized(int c, bool capitalize)
+/// @brief Capitalizes the given character.
+/// @param c the input caracter
+/// @param capitalize controls if we should capitalize or not.
+/// @return the capitalized character, if capitalize is true.
+inline char get_capitalized(int c, bool capitalize)
 {
     return static_cast<char>(capitalize ? std::toupper(c) : c);
 }
 
-static inline size_t get_strlen(const char *s)
+/// @brief Returns the lenght of the input string.
+/// @param s the input string.
+/// @return the lenght of the input string.
+inline size_t get_strlen(const char *s)
 {
     size_t len = 0;
     while (*(s++)) ++len;
     return len;
 }
 
-/// @brief Copy a random substitution for template C into P, but only before E.
-/// @param p
-/// @param e
-/// @param c
-/// @param seed
-/// @param capitalize
-/// @return
-static inline void make_copy(
-    std::size_t &loc,
+/// @brief Copy a random token inside the buffer, based on the key, at the given location.
+/// @param buffer the buffer we manipulate.
+/// @param loc the location where the substitution should be placed.
+/// @param key the key used to determine the substitution.
+/// @param seed the seed for random number generation.
+/// @param capitalize controls capitalization of the first letter.
+inline void insert_token(
     std::string &buffer,
-    int c,
+    std::size_t &location,
+    int key,
     unsigned long &seed,
     bool capitalize)
 {
     const char **tokens;
-    std::size_t count = get_tokens(c, tokens);
+    std::size_t count = get_tokens(key, tokens);
     if (count <= 0) {
-        if (loc == buffer.size())
+        if (location == buffer.size())
             buffer.resize(buffer.size() + 1);
-        buffer[loc++] = detail::get_capitalized(c, capitalize);
+        buffer[location++] = detail::get_capitalized(key, capitalize);
     } else {
         size_t select     = get_rand<size_t>(seed, 0UL, count);
         const char *token = tokens[select];
         std::size_t size  = get_strlen(token);
-        if ((loc + size) > buffer.size()) {
+        if ((location + size) > buffer.size()) {
             buffer.resize(buffer.size() + size);
         }
         while (*token) {
-            buffer[loc++] = get_capitalized(*token++, capitalize);
-            capitalize    = 0;
+            buffer[location++] = get_capitalized(*token++, capitalize);
+            capitalize         = 0;
         }
     }
 }
 
-template <typename Itererator>
-static inline Itererator next(Itererator itererator)
-{
-    return ++itererator;
-}
-
 } // namespace detail
 
-/// @brief Generate a name into DST of LEN bytes from PATTERN and using SEED.
-/// @details
-/// The length must be non-zero. For best results, the lower 32 bits of
-/// the seed should be thoroughly initialized. A particular seed will
-/// produce the same results on all platforms.
-///
-/// The return value is one of the above codes, indicating success or
-/// that something went wrong. Truncation occurs when DST was too short.
-/// Pattern is validated even when the output has been truncated.
-/// @param dst
-/// @param len
-/// @param pattern
-/// @param seed
-/// @return
-static return_code_t generate(std::string &buffer, const std::string &pattern, unsigned long &seed)
+/// @brief Generate a random name based on pattern and a given seed, and saves it into buffer.
+/// @param buffer the string where the name is placed.
+/// @param pattern the patter used to generate the random name.
+/// @param seed the seed used for random number generation.
+/// @return The return value is one of the above codes, indicating success or
+/// that something went wrong. Truncation occurs when DST was too short. Pattern
+/// is validated even when the output has been truncated.
+return_code_t generate(std::string &buffer, const std::string &pattern, unsigned long &seed)
 {
     // Current nesting depth.
     int depth = 0;
@@ -399,8 +398,8 @@ static return_code_t generate(std::string &buffer, const std::string &pattern, u
                         buffer.resize(buffer.size() + 1);
                     buffer[loc++] = detail::get_capitalized(c, capitalize);
                 } else {
-                    // Copy a substitution.
-                    detail::make_copy(loc, buffer, c, seed, capitalize);
+                    // Insert the toke inside the buffer.
+                    detail::insert_token(buffer, loc, c, seed, capitalize);
                 }
             }
             capitalize = false;
