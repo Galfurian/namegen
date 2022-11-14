@@ -1,7 +1,6 @@
+#include "namegen/namegen.hpp"
 
 #include <iostream>
-
-#include "namegen/namegen.hpp"
 
 int main(int, char *[])
 {
