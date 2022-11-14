@@ -13,9 +13,6 @@ cmake_minimum_required(VERSION 3.1)
 # Set the project name.
 project(nagen CXX)
 
-# Set C++ Standard.
-set(CMAKE_CXX_STANDARD 98)
-
 # -----------------------------------------------------------------------------
 # Add options.
 # -----------------------------------------------------------------------------
@@ -64,8 +61,6 @@ if(NAGEN_STRICT_WARNINGS)
 endif(NAGEN_STRICT_WARNINGS)
 
 string(REPLACE " " ";" NAGEN_COMPILE_OPTIONS ${NAGEN_COMPILE_OPTIONS})
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g3 -ggdb")
 
 # -----------------------------------------------------------------------------
 # DOCUMENTATION
