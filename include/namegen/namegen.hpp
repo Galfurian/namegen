@@ -41,6 +41,9 @@
 
 #pragma once
 
+#include <cstring>
+#include <cmath>
+
 namespace namegen
 {
 
@@ -318,25 +321,36 @@ static inline char get_capitalized(int c, bool capitalize)
 /// @param seed
 /// @param capitalize
 /// @return
-static inline char *make_copy(char *p, char *e, int c, unsigned long &seed, bool capitalize)
+static inline void make_copy(
+    std::string::size_type &loc,
+    std::string &buffer,
+    int c,
+    unsigned long &seed,
+    bool capitalize)
 {
     int n = get_special_offset(c);
     if (n == -1) {
-        if (p != e)
-            *p++ = get_capitalized(c, capitalize);
+        buffer[loc++] = get_capitalized(c, capitalize);
     } else {
         const short *offsets;
-        int count     = get_offsets(n, &offsets);
-        int select    = get_rand<int>(seed, 0, count);
-        const char *s = namegen_argz + offsets[select];
-        while (*s) {
-            int r = *s++;
-            if (p != e)
-                *p++ = get_capitalized(r, capitalize);
-            capitalize = 0;
+        int count                   = get_offsets(n, &offsets);
+        int select                  = get_rand<int>(seed, 0, count);
+        const char *ptr             = namegen_argz + offsets[select];
+        std::string::size_type size = std::strlen(ptr);
+        if ((loc + size) > buffer.size()) {
+            buffer.resize(buffer.size() + std::max(8UL, size));
+        }
+        while (*ptr) {
+            buffer[loc++] = get_capitalized(*ptr++, capitalize);
+            capitalize    = 0;
         }
     }
-    return p;
+}
+
+template <typename Itererator>
+static inline Itererator next(Itererator itererator)
+{
+    return ++itererator;
 }
 
 } // namespace detail
@@ -355,19 +369,21 @@ static inline char *make_copy(char *p, char *e, int c, unsigned long &seed, bool
 /// @param pattern
 /// @param seed
 /// @return
-static return_code_t generate(char *dst, unsigned long len, const std::string &pattern, unsigned long &seed)
+static return_code_t generate(std::string &buffer, const std::string &pattern, unsigned long &seed)
 {
+    // Check if the buffer is empty.
+    if (buffer.empty()) {
+        buffer.resize(8);
+    }
     // Current nesting depth.
     int depth = 0;
     // Current output pointer.
-    char *p = dst;
-    // Maxiumum output pointer.
-    char *e = dst + len;
+    std::string::size_type loc = 0;
     // Capitalize next item.
     bool capitalize = false;
 
     // Reset pointer (undo generate).
-    char *reset[NAME_MAX_DEPTH];
+    std::string::size_type reset[NAME_MAX_DEPTH];
     // Number of groups.
     unsigned long n[NAME_MAX_DEPTH];
     // Actively generating?
@@ -384,20 +400,23 @@ static return_code_t generate(char *dst, unsigned long len, const std::string &p
     int c;
 
     n[0]     = 1;
-    reset[0] = dst;
+    reset[0] = 0;
     for (std::string::const_iterator it = pattern.begin(); it != pattern.end(); ++it) {
         // Get the character.
         c = *it;
+        if ((loc + 1) >= buffer.size()) {
+            buffer.resize(buffer.size() + 8);
+        }
         // Parse the character.
         switch (c) {
         case '<':
             if (++depth == NAME_MAX_DEPTH) {
-                *dst = 0;
+                buffer.clear();
                 return TOO_DEEP;
             }
             bit          = 1UL << depth;
             n[depth]     = 1;
-            reset[depth] = p;
+            reset[depth] = loc;
             literal &= ~bit;
             silent &= ~bit;
             silent |= (silent << 1) & bit;
@@ -407,12 +426,12 @@ static return_code_t generate(char *dst, unsigned long len, const std::string &p
 
         case '(':
             if (++depth == NAME_MAX_DEPTH) {
-                *dst = 0;
+                buffer.clear();
                 return TOO_DEEP;
             }
             bit          = 1UL << depth;
             n[depth]     = 1;
-            reset[depth] = p;
+            reset[depth] = loc;
             literal |= bit;
             silent &= ~bit;
             silent |= (silent << 1) & bit;
@@ -422,39 +441,39 @@ static return_code_t generate(char *dst, unsigned long len, const std::string &p
 
         case '>':
             if (depth == 0) {
-                *dst = 0;
+                buffer.clear();
                 return INVALID;
             }
             bit = 1UL << depth--;
             if (literal & bit) {
-                *dst = 0;
+                buffer.clear();
                 return INVALID;
             }
             break;
 
         case ')':
             if (depth == 0) {
-                *dst = 0;
+                buffer.clear();
                 return INVALID;
             }
             bit = 1UL << depth--;
             if (!(literal & bit)) {
-                *dst = 0;
+                buffer.clear();
                 return INVALID;
             }
             break;
 
         case '|':
             bit = 1UL << depth;
-            /* Stay silent if parent group is silent */
+            // Stay silent if parent group is silent.
             if (!(silent & (bit >> 1))) {
                 if (detail::get_rand(seed) < (0xffffffffUL / ++n[depth])) {
-                    /* Switch to this option */
-                    p = reset[depth];
+                    // Switch to this option.
+                    loc = reset[depth];
                     silent &= ~bit;
                     capitalize = !!(capstack & bit);
                 } else {
-                    /* Skip this option */
+                    // Skip this option.
                     silent |= bit;
                 }
             }
@@ -468,28 +487,25 @@ static return_code_t generate(char *dst, unsigned long len, const std::string &p
             bit = 1UL << depth;
             if (!(silent & bit)) {
                 if (literal & bit) {
-                    /* Copy value literally */
-                    if (p != e)
-                        *p++ = detail::get_capitalized(c, capitalize);
+                    // Copy value literally.
+                    buffer[loc++] = detail::get_capitalized(c, capitalize);
                 } else {
-                    /* Copy a substitution */
-                    p = detail::make_copy(p, e, c, seed, capitalize);
+                    // Copy a substitution.
+                    detail::make_copy(loc, buffer, c, seed, capitalize);
                 }
             }
             capitalize = false;
         }
     }
-
     if (depth) {
-        *dst = 0;
+        buffer.clear();
         return INVALID;
-    } else if (p == e) {
-        p[-1] = 0;
+    } else if (loc == buffer.size()) {
+        buffer[loc - 1] = 0;
         return TRUNCATED;
-    } else {
-        *p = 0;
-        return SUCCESS;
     }
+    buffer[loc] = 0;
+    return SUCCESS;
 }
 
 } // namespace namegen
