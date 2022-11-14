@@ -282,13 +282,12 @@ static inline int get_offsets(int n, const short **offsets)
 /// @brief
 /// @param s
 /// @return
-static inline unsigned long get_rand(unsigned long *seed)
+static inline unsigned long get_rand(unsigned long &seed)
 {
-    unsigned long x = *seed;
-    x ^= x << 13;
-    x ^= (x & 0xffffffffUL) >> 17;
-    x ^= x << 5;
-    return (*seed = x) & 0xffffffffUL;
+    seed ^= seed << 13;
+    seed ^= (seed & 0xffffffffUL) >> 17;
+    seed ^= seed << 5;
+    return seed & 0xffffffffUL;
 }
 
 /// @brief
@@ -298,7 +297,7 @@ static inline unsigned long get_rand(unsigned long *seed)
 /// @param max
 /// @return
 template <typename T>
-static inline T get_rand(unsigned long *seed, T min, T max)
+static inline T get_rand(unsigned long &seed, T min, T max)
 {
     return static_cast<T>(min + (get_rand(seed) % max));
 }
@@ -319,7 +318,7 @@ static inline char get_capitalized(int c, bool capitalize)
 /// @param seed
 /// @param capitalize
 /// @return
-static inline char *make_copy(char *p, char *e, int c, unsigned long *seed, bool capitalize)
+static inline char *make_copy(char *p, char *e, int c, unsigned long &seed, bool capitalize)
 {
     int n = get_special_offset(c);
     if (n == -1) {
@@ -356,25 +355,40 @@ static inline char *make_copy(char *p, char *e, int c, unsigned long *seed, bool
 /// @param pattern
 /// @param seed
 /// @return
-static return_code_t generate(char *dst, unsigned long len, const char *pattern, unsigned long *seed)
+static return_code_t generate(char *dst, unsigned long len, const std::string &pattern, unsigned long &seed)
 {
-    int depth       = 0;         /* Current nesting depth */
-    char *p         = dst;       /* Current output pointer */
-    char *e         = dst + len; /* Maxiumum output pointer */
-    bool capitalize = false;     /* Capitalize next item */
+    // Current nesting depth.
+    int depth = 0;
+    // Current output pointer.
+    char *p = dst;
+    // Maxiumum output pointer.
+    char *e = dst + len;
+    // Capitalize next item.
+    bool capitalize = false;
 
-    /* Stacks */
-    char *reset[NAME_MAX_DEPTH];     /* Reset pointer (undo generate) */
-    unsigned long n[NAME_MAX_DEPTH]; /* Number of groups */
-    unsigned long silent   = 0;      /* Actively generating? */
-    unsigned long literal  = 0;      /* Current "mode" */
-    unsigned long capstack = 0;      /* Initial capitalization state */
+    // Reset pointer (undo generate).
+    char *reset[NAME_MAX_DEPTH];
+    // Number of groups.
+    unsigned long n[NAME_MAX_DEPTH];
+    // Actively generating?
+    unsigned long silent = 0;
+    // Current "mode".
+    unsigned long literal = 0;
+    // Initial capitalization state.
+    unsigned long capstack = 0;
+
+    // Bit for current depth.
+    unsigned long bit;
+
+    // Contains the currently parsed character.
+    int c;
 
     n[0]     = 1;
     reset[0] = dst;
-    for (; *pattern; pattern++) {
-        unsigned long bit; /* Bit for current depth */
-        int c = *pattern;
+    for (std::string::const_iterator it = pattern.begin(); it != pattern.end(); ++it) {
+        // Get the character.
+        c = *it;
+        // Parse the character.
         switch (c) {
         case '<':
             if (++depth == NAME_MAX_DEPTH) {
