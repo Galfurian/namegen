@@ -890,6 +890,7 @@ div.directory {
   font-family: Arial, Helvetica;
   font-weight: bold;
   font-size: 12px;
+  line-height: 16px;
   height: 16px;
   width: 16px;
   display: inline-block;
@@ -912,7 +913,7 @@ div.directory {
   height: 18px;
   margin-bottom: 4px;
   background-image: url("folderopen.png");
-  background-position: 0px -4px;
+  /* background-position: 0px -4px; */
   background-repeat: repeat-y;
   vertical-align: top;
   display: inline-block;
@@ -923,7 +924,7 @@ div.directory {
   height: 18px;
   margin-bottom: 4px;
   background-image: url("folderclosed.png");
-  background-position: 0px -4px;
+  /* background-position: 0px -4px; */
   background-repeat: repeat-y;
   vertical-align: top;
   display: inline-block;
@@ -934,7 +935,7 @@ div.directory {
   height: 18px;
   margin-bottom: 4px;
   background-image: url("doc.png");
-  background-position: 0px -4px;
+  /* background-position: 0px -4px; */
   background-repeat: repeat-y;
   vertical-align: top;
   display: inline-block;
