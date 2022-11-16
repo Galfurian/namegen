@@ -65,6 +65,11 @@ string(REPLACE " " ";" NAGEN_COMPILE_OPTIONS ${NAGEN_COMPILE_OPTIONS})
 # -----------------------------------------------------------------------------
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
+set(DOXYGEN_INPUT
+    ${PROJECT_SOURCE_DIR}/README.md
+    ${PROJECT_SOURCE_DIR}/LICENSE.md
+    ${PROJECT_SOURCE_DIR}/include
+)
 add_subdirectory(docs)
 
 # -----------------------------------------------------------------------------
