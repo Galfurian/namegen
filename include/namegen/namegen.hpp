@@ -242,7 +242,7 @@ inline size_t get_strlen(const char *s)
 
 /// @brief Copy a random token inside the buffer, based on the key, at the given location.
 /// @param buffer the buffer we manipulate.
-/// @param loc the location where the substitution should be placed.
+/// @param location the location where the substitution should be placed.
 /// @param key the key used to determine the substitution.
 /// @param seed the seed for random number generation.
 /// @param capitalize controls capitalization of the first letter.

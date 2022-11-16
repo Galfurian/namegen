@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # Set the project name.
-project(nagen CXX)
+project(namegen CXX)
 
 # -----------------------------------------------------------------------------
 # Add options.
@@ -65,45 +65,18 @@ string(REPLACE " " ";" NAGEN_COMPILE_OPTIONS ${NAGEN_COMPILE_OPTIONS})
 # -----------------------------------------------------------------------------
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
-find_package(Doxygen)
-
-if(DOXYGEN_FOUND)
-    # Doxygen theme
-    include(FetchContent)
-    FetchContent_Declare(DoxygenAwesome
-        GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
-        GIT_TAG 4cd62308d825fe0396d2f66ffbab45d0e247724c # 2.0.3
-    )
-    FetchContent_MakeAvailable(DoxygenAwesome)
-    FetchContent_GetProperties(DoxygenAwesome SOURCE_DIR DoxygenAwesome_SOURCE_DIR)
-
-    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-    set(DOXYGEN_GENERATE_TREEVIEW YES)
-    set(DOXYGEN_HTML_HEADER ${DoxygenAwesome_SOURCE_DIR}/doxygen-custom/header.html)
-    set(DOXYGEN_HTML_EXTRA_STYLESHEET ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome.css)
-    set(DOXYGEN_HTML_EXTRA_FILES
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-paragraph-link.js
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
-    )
-
-    doxygen_add_docs(${PROJECT_NAME}_documentation
-        include/namegen/namegen.hpp
-        LICENSE.md
-        README.md
-    )
-endif()
+add_subdirectory(docs)
 
 # -----------------------------------------------------------------------------
 # Examples
 # -----------------------------------------------------------------------------
 if(NAGEN_BUILD_EXAMPLES)
     # Add the example example.
-    add_executable(nagen_example example/example.cpp)
+    add_executable(namegen_example example/namegen_example.cpp)
 
     # Inlcude header directories.
-    target_include_directories(nagen_example PUBLIC ${PROJECT_SOURCE_DIR}/include)
+    target_include_directories(namegen_example PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
     # Set compilation flags.
-    target_compile_options(nagen_example PUBLIC ${NAGEN_COMPILE_OPTIONS})
+    target_compile_options(namegen_example PUBLIC ${NAGEN_COMPILE_OPTIONS})
 endif()
