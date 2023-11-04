@@ -33,9 +33,9 @@ mark_as_advanced(FORCE
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-option(${PROJECT_NAME}_STRICT_WARNINGS "Enable strict compiler warnings" ON)
-option(${PROJECT_NAME}_WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
-option(${PROJECT_NAME}_BUILD_EXAMPLES "Build examples" OFF)
+option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
+option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
@@ -61,16 +61,16 @@ target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/inclu
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Disable warnings that suggest using MSVC-specific safe functions
     target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
-    if(${PROJECT_NAME}_WARNINGS_AS_ERRORS)
+    if(WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} INTERFACE /WX)
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if(${PROJECT_NAME}_WARNINGS_AS_ERRORS)
+    if(WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
     endif()
 endif()
 
-if(${PROJECT_NAME}_STRICT_WARNINGS)
+if(STRICT_WARNINGS)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         # Mark system headers as external for MSVC explicitly
         # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
@@ -89,14 +89,14 @@ endif()
 # EXAMPLES
 # -----------------------------------------------------------------------------
 
-if(${PROJECT_NAME}_BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
 
     # Add the example example.
-    add_executable(${PROJECT_NAME}_simple ${PROJECT_SOURCE_DIR}/examples/simple.cpp)
+    add_executable(simple ${PROJECT_SOURCE_DIR}/examples/simple.cpp)
     # Inlcude header directories.
-    target_include_directories(${PROJECT_NAME}_simple PUBLIC ${PROJECT_SOURCE_DIR}/include)
+    target_include_directories(simple PUBLIC ${PROJECT_SOURCE_DIR}/include)
     # Set compilation flags.
-    target_compile_options(${PROJECT_NAME}_simple PUBLIC ${NAGEN_COMPILE_OPTIONS})
+    target_compile_options(simple PUBLIC ${NAGEN_COMPILE_OPTIONS})
 
 endif()
 
@@ -140,7 +140,7 @@ if(DOXYGEN_FOUND)
         ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
     )
     doxygen_add_docs(
-        ${PROJECT_NAME}_documentation
+        documentation
         ${PROJECT_SOURCE_DIR}/README.md
         ${PROJECT_SOURCE_DIR}/include/namegen/namegen.hpp
     )
