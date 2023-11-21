@@ -43,6 +43,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 /// @brief Main namespace.
@@ -202,7 +203,7 @@ inline std::size_t get_tokens(int key, const char **&tokens)
 /// @brief Returns a random number.
 /// @param seed the seed used to generate the random number, it is modified.
 /// @return a random number between 0 and ULONG_MAX.
-inline unsigned long get_rand(unsigned long &seed)
+inline uint64_t get_rand(uint64_t &seed)
 {
     seed ^= seed << 13;
     seed ^= (seed & 0xffffffffUL) >> 17;
@@ -216,7 +217,7 @@ inline unsigned long get_rand(unsigned long &seed)
 /// @param max the upper bound for the random number.
 /// @return a random number between min and max.
 template <typename T>
-inline T get_rand(unsigned long &seed, T min, T max)
+inline T get_rand(uint64_t &seed, T min, T max)
 {
     return static_cast<T>(min + (get_rand(seed) % max));
 }
@@ -250,14 +251,15 @@ inline void insert_token(
     std::string &buffer,
     std::size_t &location,
     int key,
-    unsigned long &seed,
+    uint64_t &seed,
     bool capitalize)
 {
     const char **tokens;
     std::size_t count = get_tokens(key, tokens);
     if (count <= 0) {
-        if (location == buffer.size())
+        if (location == buffer.size()) {
             buffer.resize(buffer.size() + 1);
+        }
         buffer[location++] = detail::get_capitalized(key, capitalize);
     } else {
         size_t select     = get_rand<size_t>(seed, 0UL, count);
@@ -282,7 +284,7 @@ inline void insert_token(
 /// @return The return value is one of the above codes, indicating success or
 /// that something went wrong. Truncation occurs when DST was too short. Pattern
 /// is validated even when the output has been truncated.
-return_code_t generate(std::string &buffer, const std::string &pattern, unsigned long &seed)
+return_code_t generate(std::string &buffer, const std::string &pattern, uint64_t &seed)
 {
     // Current nesting depth.
     int depth = 0;
@@ -294,19 +296,19 @@ return_code_t generate(std::string &buffer, const std::string &pattern, unsigned
     // Reset pointer (undo generate).
     std::size_t reset[NAME_MAX_DEPTH];
     // Number of groups.
-    unsigned long n[NAME_MAX_DEPTH];
+    uint64_t n[NAME_MAX_DEPTH];
     // Actively generating?
-    unsigned long silent = 0;
+    uint64_t silent = 0;
     // Current "mode".
-    unsigned long literal = 0;
+    uint64_t literal = 0;
     // Initial capitalization state.
-    unsigned long capstack = 0;
+    uint64_t capstack = 0;
 
     // Bit for current depth.
-    unsigned long bit;
+    uint64_t bit;
 
     // Contains the currently parsed character.
-    int c;
+    unsigned char c;
 
     n[0]     = 1;
     reset[0] = 0;
@@ -327,7 +329,7 @@ return_code_t generate(std::string &buffer, const std::string &pattern, unsigned
             silent &= ~bit;
             silent |= (silent << 1) & bit;
             capstack &= ~bit;
-            capstack |= (unsigned long)capitalize << depth;
+            capstack |= static_cast<uint64_t>(capitalize) << depth;
             break;
 
         case '(':
@@ -342,7 +344,7 @@ return_code_t generate(std::string &buffer, const std::string &pattern, unsigned
             silent &= ~bit;
             silent |= (silent << 1) & bit;
             capstack &= ~bit;
-            capstack |= (unsigned long)capitalize << depth;
+            capstack |= static_cast<uint64_t>(capitalize) << depth;
             break;
 
         case '>':
@@ -394,8 +396,9 @@ return_code_t generate(std::string &buffer, const std::string &pattern, unsigned
             if (!(silent & bit)) {
                 if (literal & bit) {
                     // Copy value literally.
-                    if (loc == buffer.size())
+                    if (loc == buffer.size()) {
                         buffer.resize(buffer.size() + 1);
+                    }
                     buffer[loc++] = detail::get_capitalized(c, capitalize);
                 } else {
                     // Insert the toke inside the buffer.
