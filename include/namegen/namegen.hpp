@@ -46,6 +46,12 @@
 #include <cstdint>
 #include <string>
 
+enum : unsigned char {
+    NAMEGEN_MAJOR_VERSION = 1, ///< Major version of the library.
+    NAMEGEN_MINOR_VERSION = 0, ///< Minor version of the library.
+    NAMEGEN_MICRO_VERSION = 0  ///< Micro version of the library.
+};
+
 /// @brief Main namespace.
 namespace namegen
 {
@@ -85,115 +91,89 @@ inline std::size_t get_tokens(int key, const char **&tokens)
 {
     if (key == 's') {
         static const char *__tokens[] = {
-            "ach", "ack", "ad", "age", "ald", "ale", "an", "ang", "ar", "ard",
-            "as", "ash", "at", "ath", "augh", "aw", "ban", "bel", "bur", "cer",
-            "cha", "che", "dan", "dar", "del", "den", "dra", "dyn", "ech", "eld",
-            "elm", "em", "en", "end", "eng", "enth", "er", "ess", "est", "et",
-            "gar", "gha", "hat", "hin", "hon", "ia", "ight", "ild", "im", "ina",
-            "ine", "ing", "ir", "is", "iss", "it", "kal", "kel", "kim", "kin",
-            "ler", "lor", "lye", "mor", "mos", "nal", "ny", "nys", "old", "om",
-            "on", "or", "orm", "os", "ough", "per", "pol", "qua", "que", "rad",
-            "rak", "ran", "ray", "ril", "ris", "rod", "roth", "ryn", "sam",
-            "say", "ser", "shy", "skel", "sul", "tai", "tan", "tas", "ther",
-            "tia", "tin", "ton", "tor", "tur", "um", "und", "unt", "urn", "usk",
-            "ust", "ver", "ves", "vor", "war", "wor", "yer"
-        };
+            "ach", "ack",  "ad",  "age", "ald", "ale", "an",   "ang",  "ar",   "ard",  "as",  "ash", "at",
+            "ath", "augh", "aw",  "ban", "bel", "bur", "cer",  "cha",  "che",  "dan",  "dar", "del", "den",
+            "dra", "dyn",  "ech", "eld", "elm", "em",  "en",   "end",  "eng",  "enth", "er",  "ess", "est",
+            "et",  "gar",  "gha", "hat", "hin", "hon", "ia",   "ight", "ild",  "im",   "ina", "ine", "ing",
+            "ir",  "is",   "iss", "it",  "kal", "kel", "kim",  "kin",  "ler",  "lor",  "lye", "mor", "mos",
+            "nal", "ny",   "nys", "old", "om",  "on",  "or",   "orm",  "os",   "ough", "per", "pol", "qua",
+            "que", "rad",  "rak", "ran", "ray", "ril", "ris",  "rod",  "roth", "ryn",  "sam", "say", "ser",
+            "shy", "skel", "sul", "tai", "tan", "tas", "ther", "tia",  "tin",  "ton",  "tor", "tur", "um",
+            "und", "unt",  "urn", "usk", "ust", "ver", "ves",  "vor",  "war",  "wor",  "yer"};
         tokens = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'v') {
-        static const char *__tokens[] = {
-            "a", "e", "i", "o", "u", "y"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"a", "e", "i", "o", "u", "y"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'V') {
-        static const char *__tokens[] = {
-            "a", "e", "i", "o", "u", "y", "ae", "ai", "au", "ay", "ea", "ee",
-            "ei", "eu", "ey", "ia", "ie", "oe", "oi", "oo", "ou", "ui"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"a",  "e",  "i",  "o",  "u",  "y",  "ae", "ai", "au", "ay", "ea",
+                                         "ee", "ei", "eu", "ey", "ia", "ie", "oe", "oi", "oo", "ou", "ui"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'c') {
         static const char *__tokens[] = {
-            "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r",
-            "s", "t", "v", "w", "x", "y", "z"
-        };
+            "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z"};
         tokens = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'B') {
-        static const char *__tokens[] = {
-            "b", "bl", "br", "c", "ch", "chr", "cl", "cr", "d", "dr", "f", "g",
-            "h", "j", "k", "l", "ll", "m", "n", "p", "ph", "qu", "r", "rh", "s",
-            "sch", "sh", "sl", "sm", "sn", "st", "str", "sw", "t", "th", "thr",
-            "tr", "v", "w", "wh", "y", "z", "zh"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"b", "bl", "br",  "c",   "ch", "chr", "cl", "cr", "d",  "dr",  "f",
+                                         "g", "h",  "j",   "k",   "l",  "ll",  "m",  "n",  "p",  "ph",  "qu",
+                                         "r", "rh", "s",   "sch", "sh", "sl",  "sm", "sn", "st", "str", "sw",
+                                         "t", "th", "thr", "tr",  "v",  "w",   "wh", "y",  "z",  "zh"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'C') {
-        static const char *__tokens[] = {
-            "b", "c", "ch", "ck", "d", "f", "g", "gh", "h", "k", "l", "ld", "ll",
-            "lt", "m", "n", "nd", "nn", "nt", "p", "ph", "q", "r", "rd", "rr",
-            "rt", "s", "sh", "ss", "st", "t", "th", "v", "w", "y", "z"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"b",  "c",  "ch", "ck", "d",  "f",  "g",  "gh", "h",  "k", "l", "ld",
+                                         "ll", "lt", "m",  "n",  "nd", "nn", "nt", "p",  "ph", "q", "r", "rd",
+                                         "rr", "rt", "s",  "sh", "ss", "st", "t",  "th", "v",  "w", "y", "z"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'i') {
         static const char *__tokens[] = {
-            "air", "ankle", "ball", "beef", "bone", "bum", "bumble", "bump",
-            "cheese", "clod", "clot", "clown", "corn", "dip", "dolt", "doof",
-            "dork", "dumb", "face", "finger", "foot", "fumble", "goof",
-            "grumble", "head", "knock", "knocker", "knuckle", "loaf", "lump",
-            "lunk", "meat", "muck", "munch", "nit", "numb", "pin", "puff",
-            "skull", "snark", "sneeze", "thimble", "twerp", "twit", "wad",
-            "wimp", "wipe"
-        };
+            "air",    "ankle",   "ball",  "beef",    "bone", "bum",   "bumble",  "bump",    "cheese", "clod",
+            "clot",   "clown",   "corn",  "dip",     "dolt", "doof",  "dork",    "dumb",    "face",   "finger",
+            "foot",   "fumble",  "goof",  "grumble", "head", "knock", "knocker", "knuckle", "loaf",   "lump",
+            "lunk",   "meat",    "muck",  "munch",   "nit",  "numb",  "pin",     "puff",    "skull",  "snark",
+            "sneeze", "thimble", "twerp", "twit",    "wad",  "wimp",  "wipe"};
         tokens = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'm') {
         static const char *__tokens[] = {
-            "baby", "booble", "bunker", "cuddle", "cuddly", "cutie", "doodle",
-            "foofie", "gooble", "honey", "kissie", "lover", "lovey", "moofie",
-            "mooglie", "moopie", "moopsie", "nookum", "poochie", "poof",
-            "poofie", "pookie", "schmoopie", "schnoogle", "schnookie",
-            "schnookum", "smooch", "smoochie", "smoosh", "snoogle", "snoogy",
-            "snookie", "snookum", "snuggy", "sweetie", "woogle", "woogy",
-            "wookie", "wookum", "wuddle", "wuddly", "wuggy", "wunny"
-        };
+            "baby",     "booble", "bunker",  "cuddle", "cuddly",    "cutie",     "doodle",    "foofie",    "gooble",
+            "honey",    "kissie", "lover",   "lovey",  "moofie",    "mooglie",   "moopie",    "moopsie",   "nookum",
+            "poochie",  "poof",   "poofie",  "pookie", "schmoopie", "schnoogle", "schnookie", "schnookum", "smooch",
+            "smoochie", "smoosh", "snoogle", "snoogy", "snookie",   "snookum",   "snuggy",    "sweetie",   "woogle",
+            "woogy",    "wookie", "wookum",  "wuddle", "wuddly",    "wuggy",     "wunny"};
         tokens = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'M') {
-        static const char *__tokens[] = {
-            "boo", "bunch", "bunny", "cake", "cakes", "cute", "darling",
-            "dumpling", "dumplings", "face", "foof", "goo", "head", "kin",
-            "kins", "lips", "love", "mush", "pie", "poo", "pooh", "pook", "pums"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"boo",       "bunch", "bunny", "cake", "cakes", "cute", "darling", "dumpling",
+                                         "dumplings", "face",  "foof",  "goo",  "head",  "kin",  "kins",    "lips",
+                                         "love",      "mush",  "pie",   "poo",  "pooh",  "pook", "pums"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'D') {
-        static const char *__tokens[] = {
-            "b", "bl", "br", "cl", "d", "f", "fl", "fr", "g", "gh", "gl", "gr",
-            "h", "j", "k", "kl", "m", "n", "p", "th", "w"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"b",  "bl", "br", "cl", "d",  "f", "fl", "fr", "g",  "gh", "gl",
+                                         "gr", "h",  "j",  "k",  "kl", "m", "n",  "p",  "th", "w"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     if (key == 'd') {
-        static const char *__tokens[] = {
-            "elch", "idiot", "ob", "og", "ok", "olph", "olt", "omph", "ong",
-            "onk", "oo", "oob", "oof", "oog", "ook", "ooz", "org", "ork", "orm",
-            "oron", "ub", "uck", "ug", "ulf", "ult", "um", "umb", "ump", "umph",
-            "un", "unb", "ung", "unk", "unph", "unt", "uzz"
-        };
-        tokens = __tokens;
+        static const char *__tokens[] = {"elch", "idiot", "ob",  "og",  "ok",  "olph", "olt",  "omph", "ong",
+                                         "onk",  "oo",    "oob", "oof", "oog", "ook",  "ooz",  "org",  "ork",
+                                         "orm",  "oron",  "ub",  "uck", "ug",  "ulf",  "ult",  "um",   "umb",
+                                         "ump",  "umph",  "un",  "unb", "ung", "unk",  "unph", "unt",  "uzz"};
+        tokens                        = __tokens;
         return sizeof(__tokens) / sizeof(__tokens[0]);
     }
     tokens = NULL;
@@ -226,10 +206,7 @@ inline T get_rand(uint64_t &seed, T min, T max)
 /// @param c the input caracter
 /// @param capitalize controls if we should capitalize or not.
 /// @return the capitalized character, if capitalize is true.
-inline char get_capitalized(int c, bool capitalize)
-{
-    return static_cast<char>(capitalize ? std::toupper(c) : c);
-}
+inline char get_capitalized(int c, bool capitalize) { return static_cast<char>(capitalize ? std::toupper(c) : c); }
 
 /// @brief Returns the lenght of the input string.
 /// @param s the input string.
@@ -237,7 +214,8 @@ inline char get_capitalized(int c, bool capitalize)
 inline size_t get_strlen(const char *s)
 {
     size_t len = 0;
-    while (*(s++)) ++len;
+    while (*(s++))
+        ++len;
     return len;
 }
 
@@ -247,12 +225,7 @@ inline size_t get_strlen(const char *s)
 /// @param key the key used to determine the substitution.
 /// @param seed the seed for random number generation.
 /// @param capitalize controls capitalization of the first letter.
-inline void insert_token(
-    std::string &buffer,
-    std::size_t &location,
-    int key,
-    uint64_t &seed,
-    bool capitalize)
+inline void insert_token(std::string &buffer, std::size_t &location, int key, uint64_t &seed, bool capitalize)
 {
     const char **tokens;
     std::size_t count = get_tokens(key, tokens);
@@ -287,7 +260,7 @@ inline void insert_token(
 return_code_t generate(std::string &buffer, const std::string &pattern, uint64_t &seed)
 {
     // Current nesting depth.
-    int depth = 0;
+    int depth       = 0;
     // Current output pointer.
     std::size_t loc = 0;
     // Capitalize next item.
@@ -298,9 +271,9 @@ return_code_t generate(std::string &buffer, const std::string &pattern, uint64_t
     // Number of groups.
     uint64_t n[NAME_MAX_DEPTH];
     // Actively generating?
-    uint64_t silent = 0;
+    uint64_t silent   = 0;
     // Current "mode".
-    uint64_t literal = 0;
+    uint64_t literal  = 0;
     // Initial capitalization state.
     uint64_t capstack = 0;
 
