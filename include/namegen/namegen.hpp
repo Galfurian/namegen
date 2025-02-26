@@ -325,7 +325,7 @@ inline auto get_rand(seed_t &seed, T min, T max) -> T
 inline auto pick_random_element(seed_t &seed, const detail::token_list_t &tokens) -> const token_t &
 {
     // Generate a random index between 0 and tokens.size() - 1
-    std::size_t random_index = detail::get_rand(seed, 0UL, tokens.size() - 1);
+    std::size_t random_index = detail::get_rand<std::size_t>(seed, 0UL, tokens.size() - 1);
     // Return the element at the randomly chosen index
     return tokens[random_index];
 }
@@ -408,7 +408,7 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
             return 0;
         }
         // Randomly pick an option.
-        std::size_t random_index    = detail::get_rand(options.seed, 0UL, options.options.size() - 1);
+        std::size_t random_index    = detail::get_rand<std::size_t>(options.seed, 0UL, options.options.size() - 1);
         std::string selected_option = options.options[random_index];
         // Process and append the selected option.
         for (const auto &token : selected_option) {
