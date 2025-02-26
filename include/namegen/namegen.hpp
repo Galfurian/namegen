@@ -81,6 +81,9 @@ enum : unsigned char {
 namespace namegen
 {
 
+/// @brief The type used to store the seeds.
+using seed_t = std::random_device::result_type;
+
 /// @brief Contains support functions.
 namespace detail
 {
@@ -97,7 +100,7 @@ struct option_t {
     bool capitalize   = false;        ///< Capitalization flag for the next item
     bool emit_literal = false;        ///< We are emitting literal character.
     bool inside_group = false;        ///< Indicates whether we're inside a < > group
-    std::size_t seed  = 0UL;          ///< Keeps track of the seed.
+    seed_t seed       = 0UL;          ///< Keeps track of the seed.
     std::string current_option;       ///< Holds the current option being processed in the group.
     std::vector<std::string> options; ///< Collects options inside a group.
 };
@@ -308,11 +311,10 @@ inline auto get_tokens(key_t key) -> const token_list_t &
 /// @param max the upper bound for the random number.
 /// @return a random number between min and max.
 template <typename T>
-inline auto get_rand(std::size_t &seed, T min, T max) -> T
+inline auto get_rand(seed_t &seed, T min, T max) -> T
 {
     std::default_random_engine generator(seed);
     std::uniform_int_distribution<T> distribution(min, max);
-    seed = generator();
     return distribution(generator);
 }
 
@@ -320,7 +322,7 @@ inline auto get_rand(std::size_t &seed, T min, T max) -> T
 /// @param seed A reference to the seed value used to generate the random index. It is modified during the function call.
 /// @param tokens The container (a list or vector) holding the tokens from which to pick a random element.
 /// @return A constant reference to the randomly selected token from the container.
-inline auto pick_random_element(std::size_t &seed, const detail::token_list_t &tokens) -> const token_t &
+inline auto pick_random_element(seed_t &seed, const detail::token_list_t &tokens) -> const token_t &
 {
     // Generate a random index between 0 and tokens.size() - 1
     std::size_t random_index = detail::get_rand(seed, 0UL, tokens.size() - 1);
@@ -444,7 +446,7 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
 ///                and special characters like `!`, `()`, and `<>`.
 /// @param seed The seed for random number generation.
 /// @return The output string where the generated name will be stored.
-auto generate(const std::string &pattern, std::size_t seed) -> std::string
+auto generate(const std::string &pattern, namegen::seed_t seed) -> std::string
 {
     detail::option_t options;
     options.seed = seed;
