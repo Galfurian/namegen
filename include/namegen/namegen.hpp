@@ -89,11 +89,7 @@ namespace detail
 {
 
 /// @brief Represents a single character used as a key for token categories.
-using key_t        = char;
-/// @brief Represents a token string, which is going to replace the key.
-using token_t      = std::string;
-/// @brief Represents a collection of tokens.
-using token_list_t = std::vector<token_t>;
+using key_t = char;
 
 /// @brief Define the option_t struct that encapsulates all the state options.
 struct option_t {
@@ -109,10 +105,10 @@ struct option_t {
 /// strings, and return the dimension of the array.
 /// @param key the key we want to search.
 /// @return the number of tokens in the array.
-inline auto get_tokens(key_t key) -> const token_list_t &
+inline auto get_tokens(key_t key) -> const std::vector<std::string> &
 {
     // A map of key to token lists (using vectors for dynamic storage)
-    static const std::unordered_map<key_t, token_list_t> token_map = {
+    static const std::unordered_map<key_t, std::vector<std::string>> token_map = {
         {
             's',
             {
@@ -301,7 +297,7 @@ inline auto get_tokens(key_t key) -> const token_list_t &
     if (it != token_map.end()) {
         return it->second;
     }
-    static token_list_t no_tokens = {};
+    static std::vector<std::string> no_tokens = {};
     return no_tokens;
 }
 
@@ -318,16 +314,16 @@ inline auto get_rand(seed_t &seed, T min, T max) -> T
     return distribution(generator);
 }
 
-/// @brief Picks a random element from the given container of tokens.
+/// @brief Picks a random element from the given container of strings.
 /// @param seed A reference to the seed value used to generate the random index. It is modified during the function call.
-/// @param tokens The container (a list or vector) holding the tokens from which to pick a random element.
+/// @param strings The container (a list or vector) holding the strings from which to pick a random element.
 /// @return A constant reference to the randomly selected token from the container.
-inline auto pick_random_element(seed_t &seed, const detail::token_list_t &tokens) -> const token_t &
+inline auto pick_random_element(seed_t &seed, const std::vector<std::string> &strings) -> const std::string &
 {
-    // Generate a random index between 0 and tokens.size() - 1
-    std::size_t random_index = detail::get_rand<std::size_t>(seed, 0UL, tokens.size() - 1);
-    // Return the element at the randomly chosen index
-    return tokens[random_index];
+    // Generate a random index between 0 and strings.size() - 1.
+    std::size_t random_index = detail::get_rand<std::size_t>(seed, 0UL, strings.size() - 1);
+    // Return the element at the randomly chosen index.
+    return strings[random_index];
 }
 
 /// @brief Capitalizes the given character.
@@ -381,12 +377,16 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
 {
     switch (character) {
     case '(':
-        if (!options.inside_group) {
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
             options.emit_literal = true;
         }
         break;
     case ')':
-        if (!options.inside_group) {
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
             options.emit_literal = false;
         }
         break;
@@ -408,10 +408,9 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
             return 0;
         }
         // Randomly pick an option.
-        std::size_t random_index    = detail::get_rand<std::size_t>(options.seed, 0UL, options.options.size() - 1);
-        std::string selected_option = options.options[random_index];
+        auto option = detail::pick_random_element(options.seed, options.options);
         // Process and append the selected option.
-        for (const auto &token : selected_option) {
+        for (const auto &token : option) {
             if (!detail::process_character(options, buffer, token)) {
                 return 0;
             }
@@ -421,7 +420,11 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
         break;
     }
     case '!':
-        options.capitalize = true;
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
+            options.capitalize = true;
+        }
         break;
     default:
         if (options.inside_group) {
