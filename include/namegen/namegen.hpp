@@ -1,54 +1,79 @@
 /// @file namegen.hpp
 /// @brief Fantasy name generator.
 /// @details
-/// Fantasy name generator ANSI C header library
-/// This is free and unencumbered software released into the public domain.
+/// The `generate()` function creates a name based on an input pattern. The
+/// pattern consists of various characters representing different types of
+/// random replacements. Everything else in the pattern is emitted literally.
+/// The following tokens are supported for random generation:
 ///
-/// The compile() function creates a name generator based on an input
-/// pattern. The letters s, v, V, c, B, C, i, m, M, D, and d represent
-/// different types of random replacements. Everything else is emitted
-/// literally.
+/// @section Token Explanation
 ///
-///   s - generic syllable
-///   v - vowel
-///   V - vowel or vowel combination
-///   c - consonant
-///   B - consonant or consonant combination suitable for beginning a word
-///   C - consonant or consonant combination suitable anywhere in a word
-///   i - insult
-///   m - mushy name
-///   M - mushy name ending
-///   D - consonant suited for a stupid person's name
-///   d - syllable suited for a stupid person's name (begins with a vowel)
+/// The following tokens are used for generating random parts of the name:
 ///
-/// All characters between parenthesis () are emitted literally. For
-/// example, the pattern "s(dim)", emits a random generic syllable
-/// followed by "dim".
+///  - **s**: Generic syllable: Randomly selects a generic syllable from the list.
+///  - **v**: Vowel: Randomly selects a vowel (a, e, i, o, u, y).
+///  - **V**: Vowel or vowel combination: Randomly selects a vowel or a combination
+///    of vowels.
+///  - **c**: Consonant: Randomly selects a consonant (b, c, d, f, g, h, etc.).
+///  - **B**: Consonant or consonant combination suitable for the beginning of a
+///    word: Randomly selects a consonant or a combination of consonants suitable
+///    for word beginnings (e.g., "br", "ch", "fl").
+///  - **C**: Consonant or consonant combination suitable anywhere in a word:
+///    Randomly selects a consonant or a combination of consonants that can appear
+///    anywhere in a word.
+///  - **i**: Insult: Randomly selects from a list of humorous or derogatory words
+///    (e.g., "idiot", "doof").
+///  - **m**: Mushy name: Randomly selects from a list of cute or affectionate names
+///    (e.g., "honey", "cutie").
+///  - **M**: Mushy name ending: Randomly selects from a list of affectionate
+///    endings (e.g., "boo", "kins").
+///  - **D**: Consonant suited for a "stupid" person's name: Randomly selects
+///    consonants that are typically used in silly or comedic names.
+///  - **d**: Syllable suited for a "stupid" person's name (typically begins with
+///    a vowel): Randomly selects syllables that are common in names meant to sound
+///    funny or quirky.
+///  - **t**: Randomized beginnings of titles: This token selects a title prefix
+///    like "Master of", "Ruler of", "Teacher of", "Conqueror of", etc.
+///  - **T**: Randomized endings of titles: This token selects a title suffix
+///    like "the Endless", "the Sea", "the Fiery Pit", etc.
 ///
-/// Characters between angle brackets <> emit patterns from the table
-/// above. Imagine the entire pattern is wrapped in one of these.
+/// @section Group Handling
 ///
-/// In both types of groupings, a vertical bar | denotes a random choice.
-/// Empty groups are allowed. For example, "(foo|bar)" emits either "foo"
-/// or "bar". The pattern "<c|v|>" emits a constant, vowel, or nothing at
-/// all.
+/// Characters between parentheses `()` are emitted literally. For example, the
+/// pattern "s(dim)" emits a random generic syllable followed by the literal
+/// text "dim".
 ///
-/// An exclamation point ! means to capitalize the component that follows
-/// it. For example, "!(foo)" will emit "Foo" and "v!s" will emit a
-/// lowercase vowel followed by a capitalized syllable, like "eRod".
+/// Characters between angle brackets `<>` emit patterns from the table above.
+/// If there is no vertical bar `|`, the pattern inside the angle brackets is
+/// emitted directly as a token from the table (e.g., `"<s>"` will emit a random
+/// syllable).
+/// If the pattern contains a vertical bar `|`, it allows for random selection
+/// between the options separated by the bar. For example, `"<s|v>"` will
+/// randomly select either a syllable or a vowel.
 ///
-/// This library is based on the RinkWorks Fantasy Name Generator.
-/// http://www.rinkworks.com/namegen/
+/// Empty groups are allowed. For example, `"<c|v|>"` will emit either a
+/// consonant, a vowel, or nothing at all.
+///
+/// @section Capitalization
+///
+/// An exclamation point `!` means to capitalize the component that follows it. For example:
+/// - `"!(foo)"` will emit "Foo".
+/// - `"v!s"` will emit a lowercase vowel followed by a capitalized syllable, like "eR".
 ///
 
 #pragma once
 
+#include <array>
 #include <cstdint>
+#include <cstring>
+#include <iostream>
+#include <random>
 #include <string>
+#include <unordered_map>
 
 enum : unsigned char {
     NAMEGEN_MAJOR_VERSION = 1, ///< Major version of the library.
-    NAMEGEN_MINOR_VERSION = 0, ///< Minor version of the library.
+    NAMEGEN_MINOR_VERSION = 1, ///< Minor version of the library.
     NAMEGEN_MICRO_VERSION = 0  ///< Micro version of the library.
 };
 
@@ -56,139 +81,224 @@ enum : unsigned char {
 namespace namegen
 {
 
-/// Cannot exceed bits in a long.
-#define NAME_MAX_DEPTH 32
-
-/// Return codes.
-enum return_code_t {
-    SUCCESS, ///< Name successfully generated.
-    INVALID, ///< Pattern is invalid.
-    TOO_DEEP ///< Pattern exceeds maximum nesting depth.
-};
-
-/// Rather than compile the pattern into some internal representation,
-/// the name is generated directly from the pattern in a single pass
-/// using reservoir sampling. If an alternate option is selected, the
-/// output pointer is reset to "undo" the output for the previous group.
-/// This means the output buffer may be written beyond the final output
-/// length (but never beyond the buffer length).
-///
-/// The substitution templates are stored in an efficient, packed form
-/// that contains no pointers. This is to avoid cluttering up the
-/// relocation table, but without any additional run-time overhead.
+/// @brief The type used to store the seeds.
+using seed_t = std::random_device::result_type;
 
 /// @brief Contains support functions.
 namespace detail
 {
 
+/// @brief Represents a single character used as a key for token categories.
+using key_t = char;
+
+/// @brief Define the option_t struct that encapsulates all the state options.
+struct option_t {
+    bool capitalize   = false;        ///< Capitalization flag for the next item
+    bool emit_literal = false;        ///< We are emitting literal character.
+    bool inside_group = false;        ///< Indicates whether we're inside a < > group
+    seed_t seed       = 0UL;          ///< Keeps track of the seed.
+    std::string current_option;       ///< Holds the current option being processed in the group.
+    std::vector<std::string> options; ///< Collects options inside a group.
+};
+
 /// @brief If the provided key is valid, it will set `tokens` with the array of
 /// strings, and return the dimension of the array.
 /// @param key the key we want to search.
-/// @param tokens the output argument, if the key is valid it points to an array
-/// of strings, otherwise it is set to NULL.
 /// @return the number of tokens in the array.
-inline std::size_t get_tokens(int key, const char **&tokens)
+inline auto get_tokens(key_t key) -> const std::vector<std::string> &
 {
-    if (key == 's') {
-        static const char *__tokens[] = {
-            "ach", "ack",  "ad",  "age", "ald", "ale", "an",   "ang",  "ar",   "ard",  "as",  "ash", "at",
-            "ath", "augh", "aw",  "ban", "bel", "bur", "cer",  "cha",  "che",  "dan",  "dar", "del", "den",
-            "dra", "dyn",  "ech", "eld", "elm", "em",  "en",   "end",  "eng",  "enth", "er",  "ess", "est",
-            "et",  "gar",  "gha", "hat", "hin", "hon", "ia",   "ight", "ild",  "im",   "ina", "ine", "ing",
-            "ir",  "is",   "iss", "it",  "kal", "kel", "kim",  "kin",  "ler",  "lor",  "lye", "mor", "mos",
-            "nal", "ny",   "nys", "old", "om",  "on",  "or",   "orm",  "os",   "ough", "per", "pol", "qua",
-            "que", "rad",  "rak", "ran", "ray", "ril", "ris",  "rod",  "roth", "ryn",  "sam", "say", "ser",
-            "shy", "skel", "sul", "tai", "tan", "tas", "ther", "tia",  "tin",  "ton",  "tor", "tur", "um",
-            "und", "unt",  "urn", "usk", "ust", "ver", "ves",  "vor",  "war",  "wor",  "yer"};
-        tokens = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
+    // A map of key to token lists (using vectors for dynamic storage)
+    static const std::unordered_map<key_t, std::vector<std::string>> token_map = {
+        {
+            's',
+            {
+                "ach", "ack",  "ad",  "age", "ald", "ale", "an",   "ang",  "ar",   "ard",  "as",  "ash", "at",
+                "ath", "augh", "aw",  "ban", "bel", "bur", "cer",  "cha",  "che",  "dan",  "dar", "del", "den",
+                "dra", "dyn",  "ech", "eld", "elm", "em",  "en",   "end",  "eng",  "enth", "er",  "ess", "est",
+                "et",  "gar",  "gha", "hat", "hin", "hon", "ia",   "ight", "ild",  "im",   "ina", "ine", "ing",
+                "ir",  "is",   "iss", "it",  "kal", "kel", "kim",  "kin",  "ler",  "lor",  "lye", "mor", "mos",
+                "nal", "ny",   "nys", "old", "om",  "on",  "or",   "orm",  "os",   "ough", "per", "pol", "qua",
+                "que", "rad",  "rak", "ran", "ray", "ril", "ris",  "rod",  "roth", "ryn",  "sam", "say", "ser",
+                "shy", "skel", "sul", "tai", "tan", "tas", "ther", "tia",  "tin",  "ton",  "tor", "tur", "um",
+                "und", "unt",  "urn", "usk", "ust", "ver", "ves",  "vor",  "war",  "wor",  "yer",
+            },
+        },
+        {
+            'v',
+            {
+                "a",
+                "e",
+                "i",
+                "o",
+                "u",
+                "y",
+            },
+        },
+        {
+            'V',
+            {
+                "a",  "e",  "i",  "o",  "u",  "y",  "ae", "ai", "au", "ay", "ea",
+                "ee", "ei", "eu", "ey", "ia", "ie", "oe", "oi", "oo", "ou", "ui",
+            },
+        },
+        {
+            'c',
+            {
+                "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z",
+            },
+        },
+        {
+            'B',
+            {
+                "b",  "bl",  "br", "c", "ch", "chr", "cl", "cr", "d",  "dr", "f",   "g",  "h",  "j",  "k",
+                "l",  "ll",  "m",  "n", "p",  "ph",  "qu", "r",  "rh", "s",  "sch", "sh", "sl", "sm", "sn",
+                "st", "str", "sw", "t", "th", "thr", "tr", "v",  "w",  "wh", "y",   "z",  "zh",
+            },
+        },
+        {
+            'C',
+            {
+                "b",  "c", "ch", "ck", "d", "f",  "g",  "gh", "h", "k",  "l",  "ld", "ll", "lt", "m", "n", "nd", "nn",
+                "nt", "p", "ph", "q",  "r", "rd", "rr", "rt", "s", "sh", "ss", "st", "t",  "th", "v", "w", "y",  "z",
+            },
+        },
+        {
+            'i',
+            {
+                "air",    "ankle",   "ball",  "beef",    "bone", "bum",   "bumble",  "bump",    "cheese", "clod",
+                "clot",   "clown",   "corn",  "dip",     "dolt", "doof",  "dork",    "dumb",    "face",   "finger",
+                "foot",   "fumble",  "goof",  "grumble", "head", "knock", "knocker", "knuckle", "loaf",   "lump",
+                "lunk",   "meat",    "muck",  "munch",   "nit",  "numb",  "pin",     "puff",    "skull",  "snark",
+                "sneeze", "thimble", "twerp", "twit",    "wad",  "wimp",  "wipe",
+            },
+        },
+        {
+            'm',
+            {
+                "baby",     "booble", "bunker",  "cuddle", "cuddly",    "cutie",     "doodle",    "foofie",    "gooble",
+                "honey",    "kissie", "lover",   "lovey",  "moofie",    "mooglie",   "moopie",    "moopsie",   "nookum",
+                "poochie",  "poof",   "poofie",  "pookie", "schmoopie", "schnoogle", "schnookie", "schnookum", "smooch",
+                "smoochie", "smoosh", "snoogle", "snoogy", "snookie",   "snookum",   "snuggy",    "sweetie",   "woogle",
+                "woogy",    "wookie", "wookum",  "wuddle", "wuddly",    "wuggy",     "wunny",
+            },
+        },
+        {
+            'M',
+            {
+                "boo",       "bunch", "bunny", "cake", "cakes", "cute", "darling", "dumpling",
+                "dumplings", "face",  "foof",  "goo",  "head",  "kin",  "kins",    "lips",
+                "love",      "mush",  "pie",   "poo",  "pooh",  "pook", "pums",
+            },
+        },
+        {
+            'D',
+            {
+                "b",  "bl", "br", "cl", "d",  "f", "fl", "fr", "g",  "gh", "gl",
+                "gr", "h",  "j",  "k",  "kl", "m", "n",  "p",  "th", "w",
+            },
+        },
+        {
+            'd',
+            {
+                "elch", "idiot", "ob",  "og",  "ok",   "olph", "olt", "omph", "ong", "onk",  "oo",  "oob",
+                "oof",  "oog",   "ook", "ooz", "org",  "ork",  "orm", "oron", "ub",  "uck",  "ug",  "ulf",
+                "ult",  "um",    "umb", "ump", "umph", "un",   "unb", "ung",  "unk", "unph", "unt", "uzz",
+            },
+        },
+        {
+            't',
+            {
+                "Master of",
+                "Ruler of",
+                "Teacher of",
+                "Betrayer of",
+                "Warden of",
+                "Protector of",
+                "Conqueror of",
+                "King of",
+                "Queen of",
+                "Champion of",
+                "Overlord of",
+                "Defender of",
+                "Seeker of",
+                "Harbinger of",
+                "Invoker of",
+                "Shaper of",
+                "Bearer of",
+                "Savior of",
+                "Keeper of",
+                "Lord of",
+                "Lady of",
+                "Scholar of",
+                "Lord Protector of",
+                "Bringer of",
+                "Emissary of",
+                "Voice of",
+                "Commander of",
+                "Herald of",
+                "Foe of",
+                "Enlightener of",
+                "Guardian of",
+                "Scribe of",
+                "Disruptor of",
+                "Architect of",
+                "Wanderer of",
+                "Knight of",
+                "Vanguard of",
+                "Reaper of",
+                "Adviser of",
+                "Slayer of",
+                "Hunter of",
+                "Scribe of",
+                "Guide of",
+                "Throne of",
+                "Archmage of",
+                "Mystic of",
+                "Scribe of",
+                "Watcher of",
+                "Curse of",
+                "Revenge of",
+                "Crown of",
+                "Breaker of",
+                "Lord of the Shadows",
+                "Maestro of",
+                "Illuminator of",
+                "Tamer of",
+                "Harvester of",
+                "Bringer of the Dawn",
+                "Wielder of",
+                "Mastermind of",
+                "Chronicler of",
+                "Mentor of",
+            },
+        },
+        {
+            'T',
+            {
+                "the Endless",       "the Sea",          "the Fiery Pit",  "the Deep",          "the Forsaken",
+                "the Fallen",        "the Immortal",     "the Forgotten",  "the Abyss",         "the Eternal Flame",
+                "the Storm",         "the Unseen",       "the Boundless",  "the Savage",        "the Unyielding",
+                "the Wilds",         "the First",        "the Cursed",     "the Heavens",       "the Shadows",
+                "the Eternal Night", "the Darkened",     "the Wanderer",   "the Unknown",       "the Crowned",
+                "the Iron Fist",     "the Moon",         "the Ashen",      "the Silent",        "the Wanderer",
+                "the Unforgiven",    "the Alchemist",    "the Lost",       "the Eternal Watch", "the Glorious",
+                "the Red Hand",      "the Sky",          "the Crucible",   "the Flame",         "the Ancient",
+                "the Heralded",      "the Stormbringer", "the Dread",      "the Shattered",     "the Merciless",
+                "the Void",          "the Conquered",    "the Broken",     "the Chosen",        "the Unchained",
+                "the Hunter",        "the Dying",        "the Radiant",    "the Last",          "the Hidden",
+                "the Seeker",        "the Vanquished",   "the Blighted",   "the Outcast",       "the Sacred",
+                "the Voidbringer",   "the Vengeful",     "the Unshakable", "the Phoenix",       "the Blessed",
+                "the Valiant",       "the Reborn",       "the Reckoning",
+            },
+        },
+    };
+    // Check if the key exists in the map
+    auto it = token_map.find(key);
+    if (it != token_map.end()) {
+        return it->second;
     }
-    if (key == 'v') {
-        static const char *__tokens[] = {"a", "e", "i", "o", "u", "y"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'V') {
-        static const char *__tokens[] = {"a",  "e",  "i",  "o",  "u",  "y",  "ae", "ai", "au", "ay", "ea",
-                                         "ee", "ei", "eu", "ey", "ia", "ie", "oe", "oi", "oo", "ou", "ui"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'c') {
-        static const char *__tokens[] = {
-            "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z"};
-        tokens = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'B') {
-        static const char *__tokens[] = {"b", "bl", "br",  "c",   "ch", "chr", "cl", "cr", "d",  "dr",  "f",
-                                         "g", "h",  "j",   "k",   "l",  "ll",  "m",  "n",  "p",  "ph",  "qu",
-                                         "r", "rh", "s",   "sch", "sh", "sl",  "sm", "sn", "st", "str", "sw",
-                                         "t", "th", "thr", "tr",  "v",  "w",   "wh", "y",  "z",  "zh"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'C') {
-        static const char *__tokens[] = {"b",  "c",  "ch", "ck", "d",  "f",  "g",  "gh", "h",  "k", "l", "ld",
-                                         "ll", "lt", "m",  "n",  "nd", "nn", "nt", "p",  "ph", "q", "r", "rd",
-                                         "rr", "rt", "s",  "sh", "ss", "st", "t",  "th", "v",  "w", "y", "z"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'i') {
-        static const char *__tokens[] = {
-            "air",    "ankle",   "ball",  "beef",    "bone", "bum",   "bumble",  "bump",    "cheese", "clod",
-            "clot",   "clown",   "corn",  "dip",     "dolt", "doof",  "dork",    "dumb",    "face",   "finger",
-            "foot",   "fumble",  "goof",  "grumble", "head", "knock", "knocker", "knuckle", "loaf",   "lump",
-            "lunk",   "meat",    "muck",  "munch",   "nit",  "numb",  "pin",     "puff",    "skull",  "snark",
-            "sneeze", "thimble", "twerp", "twit",    "wad",  "wimp",  "wipe"};
-        tokens = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'm') {
-        static const char *__tokens[] = {
-            "baby",     "booble", "bunker",  "cuddle", "cuddly",    "cutie",     "doodle",    "foofie",    "gooble",
-            "honey",    "kissie", "lover",   "lovey",  "moofie",    "mooglie",   "moopie",    "moopsie",   "nookum",
-            "poochie",  "poof",   "poofie",  "pookie", "schmoopie", "schnoogle", "schnookie", "schnookum", "smooch",
-            "smoochie", "smoosh", "snoogle", "snoogy", "snookie",   "snookum",   "snuggy",    "sweetie",   "woogle",
-            "woogy",    "wookie", "wookum",  "wuddle", "wuddly",    "wuggy",     "wunny"};
-        tokens = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'M') {
-        static const char *__tokens[] = {"boo",       "bunch", "bunny", "cake", "cakes", "cute", "darling", "dumpling",
-                                         "dumplings", "face",  "foof",  "goo",  "head",  "kin",  "kins",    "lips",
-                                         "love",      "mush",  "pie",   "poo",  "pooh",  "pook", "pums"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'D') {
-        static const char *__tokens[] = {"b",  "bl", "br", "cl", "d",  "f", "fl", "fr", "g",  "gh", "gl",
-                                         "gr", "h",  "j",  "k",  "kl", "m", "n",  "p",  "th", "w"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    if (key == 'd') {
-        static const char *__tokens[] = {"elch", "idiot", "ob",  "og",  "ok",  "olph", "olt",  "omph", "ong",
-                                         "onk",  "oo",    "oob", "oof", "oog", "ook",  "ooz",  "org",  "ork",
-                                         "orm",  "oron",  "ub",  "uck", "ug",  "ulf",  "ult",  "um",   "umb",
-                                         "ump",  "umph",  "un",  "unb", "ung", "unk",  "unph", "unt",  "uzz"};
-        tokens                        = __tokens;
-        return sizeof(__tokens) / sizeof(__tokens[0]);
-    }
-    tokens = NULL;
-    return 0;
-}
-
-/// @brief Returns a random number.
-/// @param seed the seed used to generate the random number, it is modified.
-/// @return a random number between 0 and ULONG_MAX.
-inline uint64_t get_rand(uint64_t &seed)
-{
-    seed ^= seed << 13;
-    seed ^= (seed & 0xffffffffUL) >> 17;
-    seed ^= seed << 5;
-    return seed & 0xffffffffUL;
+    static std::vector<std::string> no_tokens = {};
+    return no_tokens;
 }
 
 /// @brief Returns a random number.
@@ -197,196 +307,160 @@ inline uint64_t get_rand(uint64_t &seed)
 /// @param max the upper bound for the random number.
 /// @return a random number between min and max.
 template <typename T>
-inline T get_rand(uint64_t &seed, T min, T max)
+inline auto get_rand(seed_t &seed, T min, T max) -> T
 {
-    return static_cast<T>(min + (get_rand(seed) % max));
+    std::default_random_engine generator(seed);
+    std::uniform_int_distribution<T> distribution(min, max);
+    return distribution(generator);
+}
+
+/// @brief Picks a random element from the given container of strings.
+/// @param seed A reference to the seed value used to generate the random index. It is modified during the function call.
+/// @param strings The container (a list or vector) holding the strings from which to pick a random element.
+/// @return A constant reference to the randomly selected token from the container.
+inline auto pick_random_element(seed_t &seed, const std::vector<std::string> &strings) -> const std::string &
+{
+    // Generate a random index between 0 and strings.size() - 1.
+    std::size_t random_index = detail::get_rand<std::size_t>(seed, 0UL, strings.size() - 1);
+    // Return the element at the randomly chosen index.
+    return strings[random_index];
 }
 
 /// @brief Capitalizes the given character.
-/// @param c the input caracter
+/// @param character the input caracter
 /// @param capitalize controls if we should capitalize or not.
 /// @return the capitalized character, if capitalize is true.
-inline char get_capitalized(int c, bool capitalize) { return static_cast<char>(capitalize ? std::toupper(c) : c); }
-
-/// @brief Returns the lenght of the input string.
-/// @param s the input string.
-/// @return the lenght of the input string.
-inline size_t get_strlen(const char *s)
+inline auto capitalize_and_clear(key_t character, bool &capitalize) -> key_t
 {
-    size_t len = 0;
-    while (*(s++))
-        ++len;
-    return len;
+    if (capitalize) {
+        capitalize = false;
+        return static_cast<key_t>(std::toupper(character));
+    }
+    return character;
 }
 
-/// @brief Copy a random token inside the buffer, based on the key, at the given location.
-/// @param buffer the buffer we manipulate.
-/// @param location the location where the substitution should be placed.
-/// @param key the key used to determine the substitution.
-/// @param seed the seed for random number generation.
-/// @param capitalize controls capitalization of the first letter.
-inline void insert_token(std::string &buffer, std::size_t &location, int key, uint64_t &seed, bool capitalize)
+/// @brief Processes a token based on the provided key and appends it to the buffer.
+/// If the `emit_literal` flag is set, the key is added as a literal character.
+/// Otherwise, a random token is selected based on the key and added to the buffer.
+/// Capitalization is applied if specified in the options.
+///
+/// @param options The current state options that control token processing.
+/// @param buffer The string buffer where the processed token will be appended.
+/// @param key The key representing the type of token to process.
+/// @return 1 on success, 0 otherwise.
+inline auto process_token(option_t &options, std::string &buffer, key_t key) -> int
 {
-    const char **tokens;
-    std::size_t count = get_tokens(key, tokens);
-    if (count <= 0) {
-        if (location == buffer.size()) {
-            buffer.resize(buffer.size() + 1);
-        }
-        buffer[location++] = detail::get_capitalized(key, capitalize);
+    auto tokens = detail::get_tokens(key);
+    if (tokens.empty()) {
+        buffer.push_back(detail::capitalize_and_clear(key, options.capitalize));
     } else {
-        size_t select     = get_rand<size_t>(seed, 0UL, count);
-        const char *token = tokens[select];
-        std::size_t size  = get_strlen(token);
-        if ((location + size) > buffer.size()) {
-            buffer.resize(buffer.size() + size);
+        auto token = detail::pick_random_element(options.seed, tokens);
+        if (token.empty()) {
+            return 0;
         }
-        while (*token) {
-            buffer[location++] = get_capitalized(*token++, capitalize);
-            capitalize         = 0;
+        auto it = token.begin();
+        buffer.push_back(detail::capitalize_and_clear(*it++, options.capitalize));
+        buffer.insert(buffer.end(), it, token.end());
+    }
+    return 1;
+}
+
+/// @brief Processes a character from the pattern and appends it to the buffer.
+/// Handles special characters (e.g., `!`, `()`, `<>`) and processes them
+/// accordingly. Regular characters are processed as tokens and added to the buffer.
+///
+/// @param options The current state options controlling character processing.
+/// @param buffer The string buffer where the processed character will be appended.
+/// @param character The character to process, which may be part of a token or a special symbol.
+/// @return 1 on success, 0 otherwise.
+inline auto process_character(option_t &options, std::string &buffer, key_t character) -> int
+{
+    switch (character) {
+    case '(':
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
+            options.emit_literal = true;
+        }
+        break;
+    case ')':
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
+            options.emit_literal = false;
+        }
+        break;
+    case '<':
+        options.inside_group = true;
+        options.options.clear();
+        options.current_option.clear();
+        break;
+    case '|':
+        options.options.push_back(options.current_option);
+        options.current_option.clear();
+        break;
+    case '>': {
+        options.inside_group = false;
+        options.options.push_back(options.current_option);
+        options.current_option.clear();
+        // Ensure there's at least one option in the group.
+        if (options.options.empty()) {
+            return 0;
+        }
+        // Randomly pick an option.
+        auto option = detail::pick_random_element(options.seed, options.options);
+        // Process and append the selected option.
+        for (const auto &token : option) {
+            if (!detail::process_character(options, buffer, token)) {
+                return 0;
+            }
+        }
+        // Clear options after processing the group.
+        options.options.clear();
+        break;
+    }
+    case '!':
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else {
+            options.capitalize = true;
+        }
+        break;
+    default:
+        if (options.inside_group) {
+            options.current_option.push_back(character);
+        } else if (options.emit_literal) {
+            buffer.push_back(detail::capitalize_and_clear(character, options.capitalize));
+        } else {
+            detail::process_token(options, buffer, character);
         }
     }
+    return 1;
 }
 
 } // namespace detail
 
-/// @brief Generate a random name based on pattern and a given seed, and saves it into buffer.
-/// @param buffer the string where the name is placed.
-/// @param pattern the patter used to generate the random name.
-/// @param seed the seed used for random number generation.
-/// @return The return value is one of the above codes, indicating success or
-/// that something went wrong. Truncation occurs when DST was too short. Pattern
-/// is validated even when the output has been truncated.
-return_code_t generate(std::string &buffer, const std::string &pattern, uint64_t &seed)
+/// @brief Generates a random name based on the provided pattern and seed.
+/// Replaces tokens in the pattern with randomly selected values and stores
+/// the result in the buffer. Capitalization and groupings are handled
+/// according to the pattern.
+///
+/// @param pattern The pattern defining the structure of the name, with tokens
+///                and special characters like `!`, `()`, and `<>`.
+/// @param seed The seed for random number generation.
+/// @return The output string where the generated name will be stored.
+auto generate(const std::string &pattern, namegen::seed_t seed) -> std::string
 {
-    // Current nesting depth.
-    int depth       = 0;
-    // Current output pointer.
-    std::size_t loc = 0;
-    // Capitalize next item.
-    bool capitalize = false;
-
-    // Reset pointer (undo generate).
-    std::size_t reset[NAME_MAX_DEPTH];
-    // Number of groups.
-    uint64_t n[NAME_MAX_DEPTH];
-    // Actively generating?
-    uint64_t silent   = 0;
-    // Current "mode".
-    uint64_t literal  = 0;
-    // Initial capitalization state.
-    uint64_t capstack = 0;
-
-    // Bit for current depth.
-    uint64_t bit;
-
-    // Contains the currently parsed character.
-    unsigned char c;
-
-    n[0]     = 1;
-    reset[0] = 0;
-    for (std::string::const_iterator it = pattern.begin(); it != pattern.end(); ++it) {
-        // Get the character.
-        c = *it;
-        // Parse the character.
-        switch (c) {
-        case '<':
-            if (++depth == NAME_MAX_DEPTH) {
-                buffer.clear();
-                return TOO_DEEP;
-            }
-            bit          = 1UL << depth;
-            n[depth]     = 1;
-            reset[depth] = loc;
-            literal &= ~bit;
-            silent &= ~bit;
-            silent |= (silent << 1) & bit;
-            capstack &= ~bit;
-            capstack |= static_cast<uint64_t>(capitalize) << depth;
+    detail::option_t options;
+    options.seed = seed;
+    std::string buffer;
+    for (const auto &c : pattern) {
+        if (!detail::process_character(options, buffer, c)) {
+            buffer.clear();
             break;
-
-        case '(':
-            if (++depth == NAME_MAX_DEPTH) {
-                buffer.clear();
-                return TOO_DEEP;
-            }
-            bit          = 1UL << depth;
-            n[depth]     = 1;
-            reset[depth] = loc;
-            literal |= bit;
-            silent &= ~bit;
-            silent |= (silent << 1) & bit;
-            capstack &= ~bit;
-            capstack |= static_cast<uint64_t>(capitalize) << depth;
-            break;
-
-        case '>':
-            if (depth == 0) {
-                buffer.clear();
-                return INVALID;
-            }
-            bit = 1UL << depth--;
-            if (literal & bit) {
-                buffer.clear();
-                return INVALID;
-            }
-            break;
-
-        case ')':
-            if (depth == 0) {
-                buffer.clear();
-                return INVALID;
-            }
-            bit = 1UL << depth--;
-            if (!(literal & bit)) {
-                buffer.clear();
-                return INVALID;
-            }
-            break;
-
-        case '|':
-            bit = 1UL << depth;
-            // Stay silent if parent group is silent.
-            if (!(silent & (bit >> 1))) {
-                if (detail::get_rand(seed) < (0xffffffffUL / ++n[depth])) {
-                    // Switch to this option.
-                    loc = reset[depth];
-                    silent &= ~bit;
-                    capitalize = !!(capstack & bit);
-                } else {
-                    // Skip this option.
-                    silent |= bit;
-                }
-            }
-            break;
-
-        case '!':
-            capitalize = true;
-            break;
-
-        default:
-            bit = 1UL << depth;
-            if (!(silent & bit)) {
-                if (literal & bit) {
-                    // Copy value literally.
-                    if (loc == buffer.size()) {
-                        buffer.resize(buffer.size() + 1);
-                    }
-                    buffer[loc++] = detail::get_capitalized(c, capitalize);
-                } else {
-                    // Insert the toke inside the buffer.
-                    detail::insert_token(buffer, loc, c, seed, capitalize);
-                }
-            }
-            capitalize = false;
         }
     }
-    if (depth) {
-        buffer.clear();
-        return INVALID;
-    }
-    buffer[loc] = 0;
-    return SUCCESS;
+    return buffer;
 }
 
 } // namespace namegen
