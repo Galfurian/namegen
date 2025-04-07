@@ -285,7 +285,7 @@ inline bool load_tokens_from_json(const std::string &filename)
 /// @brief Sets the token list of a given key in the global token map.
 /// @param key The key for which to set the token list.
 /// @param list The list of tokens (strings) to associate with the key.
-inline void set_token(key_t key, const std::vector<std::string> &list) { namegen::detail::token_map[key] = list; }
+inline void set_token(detail::key_t key, const std::vector<std::string> &list) { namegen::detail::token_map[key] = list; }
 
 /// @brief Sets a given list of key-value pairs in the global token map.
 /// @param tokens A map where each key is a character and the value is a list of strings (tokens).
