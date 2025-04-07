@@ -12,8 +12,15 @@ void generate_and_print(const std::string &pattern)
     std::cout << " " << std::setw(32) << std::right << name << " |\n";
 }
 
-int main(int, char *[])
+int main(int argc, char *argv[])
 {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <path_to_tokens_json>\n";
+        std::cerr << "You can find a JSON with tokens inside the `examples/` folder.\n";
+        return 1;
+    }
+    // Load tokens from the specified JSON file
+    namegen::load_tokens_from_json(argv[1]);
     generate_and_print("!ssV'!i");
     generate_and_print("v!M");
     generate_and_print("c(dim)");

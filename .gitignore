@@ -32,8 +32,10 @@
 *.app
 
 # Others
-build
-cmake-build-*
 .idea
 .vscode
 .cache
+.venv
+cmake-build-*
+build
+site

@@ -71,6 +71,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <json/json.hpp>
+
 enum : unsigned char {
     NAMEGEN_MAJOR_VERSION = 1, ///< Major version of the library.
     NAMEGEN_MINOR_VERSION = 1, ///< Minor version of the library.
@@ -88,8 +90,12 @@ using seed_t = std::random_device::result_type;
 namespace detail
 {
 
-/// @brief Represents a single character used as a key for token categories.
-using key_t = char;
+using key_t        = char;                     ///< Type alias for a character key used in token processing.
+using token_list_t = std::vector<std::string>; ///< Type alias for a list of tokens (strings).
+using token_map_t  = std::unordered_map<key_t, token_list_t>; ///< Type alias for a map of tokens.
+
+/// @brief Global map to store tokens loaded from JSON files.
+static token_map_t token_map;
 
 /// @brief Define the option_t struct that encapsulates all the state options.
 struct option_t {
@@ -101,204 +107,16 @@ struct option_t {
     std::vector<std::string> options; ///< Collects options inside a group.
 };
 
-/// @brief If the provided key is valid, it will set `tokens` with the array of
-/// strings, and return the dimension of the array.
-/// @param key the key we want to search.
-/// @return the number of tokens in the array.
-inline auto get_tokens(key_t key) -> const std::vector<std::string> &
+/// @brief Retrieves the tokens corresponding to a key.
+/// @param key The key to retrieve the tokens for.
+/// @return The list of tokens for the specified key.
+inline auto get_tokens(char key) -> const std::vector<std::string> &
 {
-    // A map of key to token lists (using vectors for dynamic storage)
-    static const std::unordered_map<key_t, std::vector<std::string>> token_map = {
-        {
-            's',
-            {
-                "ach", "ack",  "ad",  "age", "ald", "ale", "an",   "ang",  "ar",   "ard",  "as",  "ash", "at",
-                "ath", "augh", "aw",  "ban", "bel", "bur", "cer",  "cha",  "che",  "dan",  "dar", "del", "den",
-                "dra", "dyn",  "ech", "eld", "elm", "em",  "en",   "end",  "eng",  "enth", "er",  "ess", "est",
-                "et",  "gar",  "gha", "hat", "hin", "hon", "ia",   "ight", "ild",  "im",   "ina", "ine", "ing",
-                "ir",  "is",   "iss", "it",  "kal", "kel", "kim",  "kin",  "ler",  "lor",  "lye", "mor", "mos",
-                "nal", "ny",   "nys", "old", "om",  "on",  "or",   "orm",  "os",   "ough", "per", "pol", "qua",
-                "que", "rad",  "rak", "ran", "ray", "ril", "ris",  "rod",  "roth", "ryn",  "sam", "say", "ser",
-                "shy", "skel", "sul", "tai", "tan", "tas", "ther", "tia",  "tin",  "ton",  "tor", "tur", "um",
-                "und", "unt",  "urn", "usk", "ust", "ver", "ves",  "vor",  "war",  "wor",  "yer",
-            },
-        },
-        {
-            'v',
-            {
-                "a",
-                "e",
-                "i",
-                "o",
-                "u",
-                "y",
-            },
-        },
-        {
-            'V',
-            {
-                "a",  "e",  "i",  "o",  "u",  "y",  "ae", "ai", "au", "ay", "ea",
-                "ee", "ei", "eu", "ey", "ia", "ie", "oe", "oi", "oo", "ou", "ui",
-            },
-        },
-        {
-            'c',
-            {
-                "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z",
-            },
-        },
-        {
-            'B',
-            {
-                "b",  "bl",  "br", "c", "ch", "chr", "cl", "cr", "d",  "dr", "f",   "g",  "h",  "j",  "k",
-                "l",  "ll",  "m",  "n", "p",  "ph",  "qu", "r",  "rh", "s",  "sch", "sh", "sl", "sm", "sn",
-                "st", "str", "sw", "t", "th", "thr", "tr", "v",  "w",  "wh", "y",   "z",  "zh",
-            },
-        },
-        {
-            'C',
-            {
-                "b",  "c", "ch", "ck", "d", "f",  "g",  "gh", "h", "k",  "l",  "ld", "ll", "lt", "m", "n", "nd", "nn",
-                "nt", "p", "ph", "q",  "r", "rd", "rr", "rt", "s", "sh", "ss", "st", "t",  "th", "v", "w", "y",  "z",
-            },
-        },
-        {
-            'i',
-            {
-                "air",    "ankle",   "ball",  "beef",    "bone", "bum",   "bumble",  "bump",    "cheese", "clod",
-                "clot",   "clown",   "corn",  "dip",     "dolt", "doof",  "dork",    "dumb",    "face",   "finger",
-                "foot",   "fumble",  "goof",  "grumble", "head", "knock", "knocker", "knuckle", "loaf",   "lump",
-                "lunk",   "meat",    "muck",  "munch",   "nit",  "numb",  "pin",     "puff",    "skull",  "snark",
-                "sneeze", "thimble", "twerp", "twit",    "wad",  "wimp",  "wipe",
-            },
-        },
-        {
-            'm',
-            {
-                "baby",     "booble", "bunker",  "cuddle", "cuddly",    "cutie",     "doodle",    "foofie",    "gooble",
-                "honey",    "kissie", "lover",   "lovey",  "moofie",    "mooglie",   "moopie",    "moopsie",   "nookum",
-                "poochie",  "poof",   "poofie",  "pookie", "schmoopie", "schnoogle", "schnookie", "schnookum", "smooch",
-                "smoochie", "smoosh", "snoogle", "snoogy", "snookie",   "snookum",   "snuggy",    "sweetie",   "woogle",
-                "woogy",    "wookie", "wookum",  "wuddle", "wuddly",    "wuggy",     "wunny",
-            },
-        },
-        {
-            'M',
-            {
-                "boo",       "bunch", "bunny", "cake", "cakes", "cute", "darling", "dumpling",
-                "dumplings", "face",  "foof",  "goo",  "head",  "kin",  "kins",    "lips",
-                "love",      "mush",  "pie",   "poo",  "pooh",  "pook", "pums",
-            },
-        },
-        {
-            'D',
-            {
-                "b",  "bl", "br", "cl", "d",  "f", "fl", "fr", "g",  "gh", "gl",
-                "gr", "h",  "j",  "k",  "kl", "m", "n",  "p",  "th", "w",
-            },
-        },
-        {
-            'd',
-            {
-                "elch", "idiot", "ob",  "og",  "ok",   "olph", "olt", "omph", "ong", "onk",  "oo",  "oob",
-                "oof",  "oog",   "ook", "ooz", "org",  "ork",  "orm", "oron", "ub",  "uck",  "ug",  "ulf",
-                "ult",  "um",    "umb", "ump", "umph", "un",   "unb", "ung",  "unk", "unph", "unt", "uzz",
-            },
-        },
-        {
-            't',
-            {
-                "Master of",
-                "Ruler of",
-                "Teacher of",
-                "Betrayer of",
-                "Warden of",
-                "Protector of",
-                "Conqueror of",
-                "King of",
-                "Queen of",
-                "Champion of",
-                "Overlord of",
-                "Defender of",
-                "Seeker of",
-                "Harbinger of",
-                "Invoker of",
-                "Shaper of",
-                "Bearer of",
-                "Savior of",
-                "Keeper of",
-                "Lord of",
-                "Lady of",
-                "Scholar of",
-                "Lord Protector of",
-                "Bringer of",
-                "Emissary of",
-                "Voice of",
-                "Commander of",
-                "Herald of",
-                "Foe of",
-                "Enlightener of",
-                "Guardian of",
-                "Scribe of",
-                "Disruptor of",
-                "Architect of",
-                "Wanderer of",
-                "Knight of",
-                "Vanguard of",
-                "Reaper of",
-                "Adviser of",
-                "Slayer of",
-                "Hunter of",
-                "Scribe of",
-                "Guide of",
-                "Throne of",
-                "Archmage of",
-                "Mystic of",
-                "Scribe of",
-                "Watcher of",
-                "Curse of",
-                "Revenge of",
-                "Crown of",
-                "Breaker of",
-                "Lord of the Shadows",
-                "Maestro of",
-                "Illuminator of",
-                "Tamer of",
-                "Harvester of",
-                "Bringer of the Dawn",
-                "Wielder of",
-                "Mastermind of",
-                "Chronicler of",
-                "Mentor of",
-            },
-        },
-        {
-            'T',
-            {
-                "the Endless",       "the Sea",          "the Fiery Pit",  "the Deep",          "the Forsaken",
-                "the Fallen",        "the Immortal",     "the Forgotten",  "the Abyss",         "the Eternal Flame",
-                "the Storm",         "the Unseen",       "the Boundless",  "the Savage",        "the Unyielding",
-                "the Wilds",         "the First",        "the Cursed",     "the Heavens",       "the Shadows",
-                "the Eternal Night", "the Darkened",     "the Wanderer",   "the Unknown",       "the Crowned",
-                "the Iron Fist",     "the Moon",         "the Ashen",      "the Silent",        "the Wanderer",
-                "the Unforgiven",    "the Alchemist",    "the Lost",       "the Eternal Watch", "the Glorious",
-                "the Red Hand",      "the Sky",          "the Crucible",   "the Flame",         "the Ancient",
-                "the Heralded",      "the Stormbringer", "the Dread",      "the Shattered",     "the Merciless",
-                "the Void",          "the Conquered",    "the Broken",     "the Chosen",        "the Unchained",
-                "the Hunter",        "the Dying",        "the Radiant",    "the Last",          "the Hidden",
-                "the Seeker",        "the Vanquished",   "the Blighted",   "the Outcast",       "the Sacred",
-                "the Voidbringer",   "the Vengeful",     "the Unshakable", "the Phoenix",       "the Blessed",
-                "the Valiant",       "the Reborn",       "the Reckoning",
-            },
-        },
-    };
-    // Check if the key exists in the map
-    auto it = token_map.find(key);
-    if (it != token_map.end()) {
-        return it->second;
+    if (token_map.find(key) != token_map.end()) {
+        return token_map[key];
     }
-    static std::vector<std::string> no_tokens = {};
-    return no_tokens;
+    static std::vector<std::string> empty_tokens;
+    return empty_tokens;
 }
 
 /// @brief Returns a random number.
@@ -306,8 +124,7 @@ inline auto get_tokens(key_t key) -> const std::vector<std::string> &
 /// @param min the lower bound for the random number.
 /// @param max the upper bound for the random number.
 /// @return a random number between min and max.
-template <typename T>
-inline auto get_rand(seed_t &seed, T min, T max) -> T
+template <typename T> inline auto get_rand(seed_t &seed, T min, T max) -> T
 {
     std::default_random_engine generator(seed);
     std::uniform_int_distribution<T> distribution(min, max);
@@ -439,6 +256,45 @@ inline auto process_character(option_t &options, std::string &buffer, key_t char
 }
 
 } // namespace detail
+
+/// @brief Loads tokens from a JSON file.
+/// @param filename The path to the JSON file containing the tokens.
+/// @return true if the loading was successful, false otherwise.
+inline bool load_tokens_from_json(const std::string &filename)
+{
+    try {
+        auto root = json::parser::parse_file(filename);
+        if (!root.is_object()) {
+            std::cerr << "Error: JSON root is not an object." << std::endl;
+            return false;
+        }
+        // Clear existing tokens before loading new ones.
+        detail::token_map.clear();
+        root >> detail::token_map;
+        if (detail::token_map.empty()) {
+            std::cerr << "Warning: No tokens found in the JSON file." << std::endl;
+            return false;
+        }
+        return true;
+    } catch (const std::exception &e) {
+        std::cerr << "Error loading tokens: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+/// @brief Sets the token list of a given key in the global token map.
+/// @param key The key for which to set the token list.
+/// @param list The list of tokens (strings) to associate with the key.
+inline void set_token(key_t key, const std::vector<std::string> &list) { namegen::detail::token_map[key] = list; }
+
+/// @brief Sets a given list of key-value pairs in the global token map.
+/// @param tokens A map where each key is a character and the value is a list of strings (tokens).
+inline void set_tokens(const detail::token_map_t &tokens)
+{
+    for (const auto &token : tokens) {
+        set_token(token.first, token.second);
+    }
+}
 
 /// @brief Generates a random name based on the provided pattern and seed.
 /// Replaces tokens in the pattern with randomly selected values and stores

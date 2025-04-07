@@ -47,6 +47,25 @@ find_package(Doxygen)
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 
 # -----------------------------------------------------------------------------
+# EXTERNAL DEPENDENCIES
+# -----------------------------------------------------------------------------
+
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY "https://github.com/Galfurian/json.git"
+    GIT_SHALLOW    TRUE
+    GIT_PROGRESS   TRUE
+    GIT_TAG        main
+)
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+    message(STATUS "Retrieving `json`...")
+    FetchContent_MakeAvailable(json)
+    # Hide fetchcontent variables.
+    mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_JSON FETCHCONTENT_SOURCE_DIR_JSON)
+endif()
+
+# -----------------------------------------------------------------------------
 # LIBRARY
 # -----------------------------------------------------------------------------
 
@@ -54,7 +73,9 @@ find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Inlcude header directories and set the library.
-target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include ${json_SOURCE_DIR}/include)
+# Link libraries to our interface library.
+target_link_libraries(${PROJECT_NAME} INTERFACE json::json)
 # Enalbe C++17.
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_11)
 
