@@ -361,18 +361,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-name-generation" class="md-nav__link">
+  <a href="#loading-tokens-from-json" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Name Generation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#title-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Title Generation
+      Loading Tokens from JSON
     </span>
   </a>
   
@@ -380,15 +371,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-explanation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Token Explanation
-    </span>
-  </a>
   
 </li>
       
@@ -405,6 +387,15 @@
   <a href="#capitalization" class="md-nav__link">
     <span class="md-ellipsis">
       Capitalization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-of-tokens-examplestokensjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example of tokens examples/tokens.json
     </span>
   </a>
   
@@ -515,18 +506,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-name-generation" class="md-nav__link">
+  <a href="#loading-tokens-from-json" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Name Generation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#title-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Title Generation
+      Loading Tokens from JSON
     </span>
   </a>
   
@@ -534,15 +516,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-explanation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Token Explanation
-    </span>
-  </a>
   
 </li>
       
@@ -559,6 +532,15 @@
   <a href="#capitalization" class="md-nav__link">
     <span class="md-ellipsis">
       Capitalization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-of-tokens-examplestokensjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example of tokens examples/tokens.json
     </span>
   </a>
   
@@ -628,45 +610,51 @@ include the header file in your project.</p>
 <li><strong><code>detail/</code></strong>: Internal namespace that holds helper functions for token generation and pattern processing.</li>
 </ul>
 <h2 id="example-usage">Example Usage</h2>
-<h3 id="basic-name-generation">Basic Name Generation</h3>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;namegen/namegen.hpp&quot;</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Name: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">namegen</span><span class="o">::</span><span class="n">generate</span><span class="p">(</span><span class="s">&quot;!ssV&#39;!i&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12345</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
+<h3 id="loading-tokens-from-json">Loading Tokens from JSON</h3>
+<p>You can load all the token categories dynamically from a JSON file using <code>namegen::load_tokens_from_json</code>.</p>
+<p>This allows full customization of the generator at runtime.</p>
+<p>Example of JSON file: <code>tokens.json</code></p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;s&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ach&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ban&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;mor&quot;</span><span class="p">],</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;v&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;e&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;i&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;o&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;u&quot;</span><span class="p">],</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;V&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ai&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ae&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;oo&quot;</span><span class="p">],</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;c&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;f&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;k&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;m&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;r&quot;</span><span class="p">],</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;i&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;fool&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;dolt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;grumble&quot;</span><span class="p">]</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>how to use in code:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;namegen/namegen.hpp&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fstream&gt;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Usage: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; tokens.json</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="c1">// Load the token definitions from a JSON file.</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="n">namegen</span><span class="o">::</span><span class="n">load_tokens_from_json</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="c1">// Generate a name using the provided pattern and seed.</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">namegen</span><span class="o">::</span><span class="n">generate</span><span class="p">(</span><span class="s">&quot;!ssV&#39;!i&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12345</span><span class="p">);</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Name: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Possible output:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Name:<span class="w"> </span>Ashasei<span class="err">&#39;</span>Grumble
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Name:<span class="w"> </span>Banmorai<span class="err">&#39;</span>Grumble
 </span></code></pre></div>
-<h3 id="title-generation">Title Generation</h3>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;namegen.hpp&quot;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Title: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">namegen</span><span class="o">::</span><span class="n">generate</span><span class="p">(</span><span class="s">&quot;tT&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12345</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+<p>You can also inject tokens programmatically using:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">namegen</span><span class="o">::</span><span class="n">set_token</span><span class="p">(</span><span class="sc">&#39;x&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bar&quot;</span><span class="p">});</span>
 </span></code></pre></div>
-<p>Possible output:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Title:<span class="w"> </span>Master<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>Forgotten
+<p>or:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">namegen</span><span class="o">::</span><span class="n">set_tokens</span><span class="p">({</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="p">{</span><span class="sc">&#39;x&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bar&quot;</span><span class="p">}},</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="p">{</span><span class="sc">&#39;y&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;alpha&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;beta&quot;</span><span class="p">}}</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">});</span>
 </span></code></pre></div>
-<h2 id="token-explanation">Token Explanation</h2>
-<p>The following tokens are used for generating random parts of the name:</p>
-<ul>
-<li><strong>s</strong>: Generic syllable: Randomly selects a generic syllable from the list.</li>
-<li><strong>v</strong>: Vowel: Randomly selects a vowel (a, e, i, o, u, y).</li>
-<li><strong>V</strong>: Vowel or vowel combination: Randomly selects a vowel or a combination of vowels.</li>
-<li><strong>c</strong>: Consonant: Randomly selects a consonant (b, c, d, f, g, h, etc.).</li>
-<li><strong>B</strong>: Consonant or consonant combination suitable for the beginning of a word: Randomly selects a consonant or a combination of consonants suitable for word beginnings (e.g., "br", "ch", "fl").</li>
-<li><strong>C</strong>: Consonant or consonant combination suitable anywhere in a word: Randomly selects a consonant or a combination of consonants that can appear anywhere in a word.</li>
-<li><strong>i</strong>: Insult: Randomly selects from a list of humorous or derogatory words (e.g., "idiot", "doof").</li>
-<li><strong>m</strong>: Mushy name: Randomly selects from a list of cute or affectionate names (e.g., "honey", "cutie").</li>
-<li><strong>M</strong>: Mushy name ending: Randomly selects from a list of affectionate endings (e.g., "boo", "kins").</li>
-<li><strong>D</strong>: Consonant suited for a "stupid" person's name: Randomly selects consonants that are typically used in silly or comedic names.</li>
-<li><strong>d</strong>: Syllable suited for a "stupid" person's name (typically begins with a vowel): Randomly selects syllables that are common in names meant to sound funny or quirky.</li>
-<li><strong>t</strong>: Randomized beginnings of titles: This token selects a title prefix like "Master of", "Ruler of", "Teacher of", "Conqueror of", etc.</li>
-<li><strong>T</strong>: Randomized endings of titles: This token selects a title suffix like "the Endless", "the Sea", "the Fiery Pit", etc.</li>
-</ul>
 <h2 id="group-handling">Group Handling</h2>
 <ul>
 <li><strong>Parentheses <code>()</code></strong>: Characters inside parentheses are emitted literally.</li>
@@ -682,6 +670,23 @@ include the header file in your project.</p>
 <li>The exclamation mark <code>!</code> means to capitalize the following component.</li>
 <li>Example: <code>"!(foo)"</code> generates "Foo".</li>
 <li>Example: <code>"v!s"</code> generates a lowercase vowel followed by a capitalized syllable (e.g., "eRod").</li>
+</ul>
+<h2 id="example-of-tokens-examplestokensjson">Example of tokens <code>examples/tokens.json</code></h2>
+<p>The example provided in <code>examples/tokens.json</code>, contains the following tokens used for generating random parts of the name:</p>
+<ul>
+<li><strong>s</strong>: Generic syllable: Randomly selects a generic syllable from the list.</li>
+<li><strong>v</strong>: Vowel: Randomly selects a vowel (a, e, i, o, u, y).</li>
+<li><strong>V</strong>: Vowel or vowel combination: Randomly selects a vowel or a combination of vowels.</li>
+<li><strong>c</strong>: Consonant: Randomly selects a consonant (b, c, d, f, g, h, etc.).</li>
+<li><strong>B</strong>: Consonant or consonant combination suitable for the beginning of a word: Randomly selects a consonant or a combination of consonants suitable for word beginnings (e.g., "br", "ch", "fl").</li>
+<li><strong>C</strong>: Consonant or consonant combination suitable anywhere in a word: Randomly selects a consonant or a combination of consonants that can appear anywhere in a word.</li>
+<li><strong>i</strong>: Insult: Randomly selects from a list of humorous or derogatory words (e.g., "idiot", "doof").</li>
+<li><strong>m</strong>: Mushy name: Randomly selects from a list of cute or affectionate names (e.g., "honey", "cutie").</li>
+<li><strong>M</strong>: Mushy name ending: Randomly selects from a list of affectionate endings (e.g., "boo", "kins").</li>
+<li><strong>D</strong>: Consonant suited for a "stupid" person's name: Randomly selects consonants that are typically used in silly or comedic names.</li>
+<li><strong>d</strong>: Syllable suited for a "stupid" person's name (typically begins with a vowel): Randomly selects syllables that are common in names meant to sound funny or quirky.</li>
+<li><strong>t</strong>: Randomized beginnings of titles: This token selects a title prefix like "Master of", "Ruler of", "Teacher of", "Conqueror of", etc.</li>
+<li><strong>T</strong>: Randomized endings of titles: This token selects a title suffix like "the Endless", "the Sea", "the Fiery Pit", etc.</li>
 </ul>
 <h2 id="license">License</h2>
 <p><code>namegen</code> is released under the MIT License.</p>
